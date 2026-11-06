@@ -16,6 +16,10 @@ app.use(express.json({ limit: '100kb' }));
 if (process.env.NODE_ENV !== 'production') app.use(cors());
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
+// Which commit is live — used to confirm a deploy finished (Render sets RENDER_GIT_COMMIT).
+const startedAt = new Date().toISOString();
+app.get('/api/version', (_req, res) =>
+  res.json({ commit: process.env.RENDER_GIT_COMMIT || null, startedAt }));
 app.use('/api/auth', authRouter);
 app.use('/api/profile', profileRouter);
 app.use('/api/leaderboard', leaderboardRouter);
