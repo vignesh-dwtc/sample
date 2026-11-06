@@ -4,7 +4,7 @@ services:
   - type: web
     name: playnest
     runtime: node
-    plan: starter            # free plan works too, but sleeps when idle (drops live party rooms)
+    plan: free             # upgrade to "starter" later so the server never sleeps (keeps live party rooms alive)
     buildCommand: npm run build
     startCommand: npm start
     healthCheckPath: /api/health

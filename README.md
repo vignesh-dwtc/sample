@@ -83,7 +83,7 @@ npm test
    3. Optionally set `ANTHROPIC_API_KEY` to turn on AI-generated detective cases.
 3. Deploy. Render runs `npm run build` (installs everything and builds the React app) and then `npm start`.
 
-Party rooms live in the server's memory. Run a single instance, and use a paid plan so the server doesn't sleep in the middle of a game.
+Party rooms live in the server's memory. It deploys on the **free** plan by default. The free plan sleeps after 15 minutes idle (first visit then takes ~30–60 s, and live party rooms are lost); switch `plan: free` to `plan: starter` in `render.yaml` when you go live. Run a single instance.
 
 ## Environment variables
 
