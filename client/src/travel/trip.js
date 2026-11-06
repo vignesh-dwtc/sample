@@ -13,7 +13,14 @@ export const MODES = {
   flight: { label: 'Flight', icon: '✈️', maxKmh: 1100 },
 };
 
-const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch { return null; } };
+const load = () => {
+  try {
+    const t = JSON.parse(localStorage.getItem(KEY));
+    // Ignore a corrupted/foreign value instead of crashing every travel page.
+    if (!t || typeof t !== 'object' || !Array.isArray(t.points) || typeof t.startedAt !== 'number') return null;
+    return { ...t, distanceKm: Number(t.distanceKm) || 0, milestones: Array.isArray(t.milestones) ? t.milestones : [] };
+  } catch { return null; }
+};
 let state = load();
 const listeners = new Set();
 const save = (next) => {
@@ -23,7 +30,7 @@ const save = (next) => {
 };
 const subscribe = (l) => { listeners.add(l); return () => listeners.delete(l); };
 
-/** Current trip or null: { id, mode, startedAt, origin, destination: {name, lat, lon}|null, points: [[lat, lon, ms]], distanceKm, milestones: number[] } */
+/** Current trip or null: { id, mode, startedAt, origin, destination: {name, lat, lon}|null, points: [[lat, lon, ms]], distanceKm, milestones: number[], unsent?: number[] } */
 export const useTripState = () => useSyncExternalStore(subscribe, () => state, () => state);
 export const getTrip = () => state;
 
@@ -50,18 +57,45 @@ export function addPosition(pos) {
   return d;
 }
 
+let sending = false;
+let retryAt = 0;
+const RETRY_MS = 60000;
+
+/** Send milestones that are owed but not yet confirmed by the server (offline / patchy network). */
+function flushMilestones(onMilestone) {
+  const owed = state?.unsent;
+  if (sending || !owed?.length || Date.now() < retryAt) return;
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+  const km = Math.max(...owed);
+  const tripId = state.id;
+  const done = () => { if (state?.id === tripId) save({ ...state, unsent: (state.unsent || []).filter((k) => k !== km) }); };
+  sending = true;
+  submitTravelScore('travel_trip', km, { tripId, mode: state.mode })
+    .then((r) => { done(); onMilestone?.(r.progress, km); })
+    .catch((e) => {
+      // 4xx (e.g. 409 "already counted today") will never succeed: drop it. Network/5xx/429: retry later.
+      if (e?.status >= 400 && e.status < 500 && e.status !== 429) done();
+      else retryAt = Date.now() + RETRY_MS;
+    })
+    .finally(() => { sending = false; if (state?.unsent?.length && Date.now() >= retryAt) flushMilestones(onMilestone); });
+}
+
 /** Hook: feed live positions into the trip and award distance milestones (calls onMilestone(progress, km)). */
 export function useTripRecorder(position, onMilestone) {
   useEffect(() => {
     if (!position || !state) return;
     addPosition(position);
     const due = MILESTONES_KM.filter((km) => state.distanceKm >= km && !state.milestones.includes(km));
-    if (!due.length) return;
-    const km = due[due.length - 1];
-    save({ ...state, milestones: [...state.milestones, ...due] });
-    submitTravelScore('travel_trip', km, { tripId: state.id, mode: state.mode })
-      .then((r) => onMilestone?.(r.progress, km)).catch(() => {});
+    // Only the biggest newly passed milestone is scored; all passed ones are marked as reached.
+    if (due.length) save({ ...state, milestones: [...state.milestones, ...due], unsent: [...(state.unsent || []), due[due.length - 1]] });
+    flushMilestones(onMilestone);
   }, [position, onMilestone]);
+  // Retry owed milestones as soon as the connection comes back.
+  useEffect(() => {
+    const up = () => { retryAt = 0; flushMilestones(onMilestone); };
+    window.addEventListener('online', up);
+    return () => window.removeEventListener('online', up);
+  }, [onMilestone]);
 }
 
 /** Save a travel game result → { progress } (pass progress to useSession().celebrate). */

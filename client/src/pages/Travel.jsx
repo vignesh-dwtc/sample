@@ -63,7 +63,7 @@ function TripSetup({ online, onDone, onCancel, initial }) {
   const [dest, setDest] = useState(initial?.destination || null);
   const editing = !!initial;
   const save = () => {
-    if (editing) { setMode(mode); setDestination(dest); } else startTrip({ mode, destination: dest });
+    if (editing) { setMode(mode); setDestination(dest); } else { startTrip({ mode, destination: dest }); window.scrollTo({ top: 0, behavior: 'smooth' }); }
     onDone?.(mode, dest);
   };
   return (

@@ -2,13 +2,15 @@
   "name": "playnest",
   "private": true,
   "version": "1.0.0",
-  "description": "PlayNest — daily puzzles, party games and AI mysteries",
-  "engines": { "node": ">=20" },
+  "description": "PlayNest \u2014 daily puzzles, party games and AI mysteries",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "npm ci --prefix server --omit=dev && npm ci --prefix client --include=dev && npm run build --prefix client",
     "start": "node server/src/index.js",
     "dev:server": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
-    "test": "npm test --prefix server"
+    "test": "npm test --prefix server && node --test \"client/src/travel/**/*.test.js\" \"client/src/components/*.test.js\""
   }
 }

@@ -9,6 +9,7 @@ export function useHeading() {
   const [heading, setHeading] = useState(null);
   const [status, setStatus] = useState('idle');
   const smoothed = useRef(null);
+  const lastEmit = useRef(0);
 
   const onOrient = (e) => {
     let h = null;
@@ -18,6 +19,9 @@ export function useHeading() {
     // light smoothing across the 0/360 wrap
     if (smoothed.current == null) smoothed.current = h;
     else { const d = ((h - smoothed.current + 540) % 360) - 180; smoothed.current = (smoothed.current + d * 0.25 + 360) % 360; }
+    const now = performance.now();
+    if (now - lastEmit.current < 100) return; // ~10 updates/s is plenty and saves battery
+    lastEmit.current = now;
     setHeading(smoothed.current);
     setStatus('active');
   };

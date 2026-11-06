@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export const TRAVEL_GAMES = [
   { to: '/travel/sky', icon: '🧭', name: 'Sky Compass', blurb: 'Point your phone at the real sun or moon. How close can you get?', offline: true, hue: 'gold' },
-  { to: '/travel/map', icon: '🗺️', name: 'Live Map', blurb: 'Your route drawn live, with interesting places nearby.', offline: false, hue: 'teal' },
+  { to: '/travel/map', icon: '🗺️', name: 'Live Map', blurb: 'Your route drawn live on the map, with distance and ETA.', offline: false, hue: 'teal' },
   { to: '/travel/quiz', icon: '❓', name: 'Guess Where?', blurb: 'Quick questions about the places you are passing right now.', offline: false, hue: 'violet' },
   { to: '/travel/bingo', icon: '🎯', name: 'Window Bingo', blurb: 'Spot cows, chai stalls and toll booths out of the window.', offline: true, hue: 'rose' },
   { to: '/travel/predict', icon: '⏱️', name: 'Distance Predictor', blurb: 'Guess when you’ll hit the next kilometre mark. Beat the clock.', offline: true, hue: 'blue' },
