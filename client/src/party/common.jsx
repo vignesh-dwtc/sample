@@ -9,7 +9,7 @@ export const GAME_INFO = {
   },
   reaction: {
     name: 'Reaction Duel',
-    icon: '⚡',
+    icon: '🚦',
     tagline: '5 rounds of nerve. Wait for green, then tap faster than everyone else.',
     rules: ['Tap or press Space on green', 'First tap wins 1000', 'Jump early: −250'],
   },

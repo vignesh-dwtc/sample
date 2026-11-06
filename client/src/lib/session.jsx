@@ -35,14 +35,15 @@ export function SessionProvider({ children }) {
 
   const toast = useCallback((t) => {
     const id = Math.random().toString(36).slice(2);
-    // Layout shows at most 4 at once; toasts queued behind that get extra time so they are seen.
-    const queued = Math.max(0, liveToasts.current - 3);
+    // Layout shows only a few at once (2 on phones); toasts queued behind others get extra
+    // time so each one is on screen for a while before it expires.
+    const queued = Math.min(liveToasts.current, 6);
     liveToasts.current += 1;
     setToasts((ts) => [...ts, { id, ...t }]);
     setTimeout(() => {
       liveToasts.current -= 1;
       setToasts((ts) => ts.filter((x) => x.id !== id));
-    }, (t.duration || 4000) + queued * 1500);
+    }, (t.duration || 4000) + queued * 1200);
   }, []);
 
   const celebrate = useCallback((progress) => {

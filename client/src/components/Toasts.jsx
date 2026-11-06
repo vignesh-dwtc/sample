@@ -4,25 +4,41 @@ import { IconClose } from './Icons.jsx';
 
 const EXIT_MS = 260;
 const MAX_VISIBLE = 4;
+const MAX_VISIBLE_PHONE = 2; // matches the 760px breakpoint in Layout.css
+const phoneQuery = '(max-width: 760px)';
 const KINDS = new Set(['xp', 'streak', 'level', 'achievement', 'error', 'success', 'info']);
+
+// Oldest first: a burst (XP, streak, achievements) queues behind the cap instead of
+// pushing the first and most important toast (+XP) off screen before it is seen.
+function visible(items, max) {
+  let shown = 0;
+  return items.filter((t) => t.leaving || shown++ < max);
+}
+
+function useIsPhone() {
+  const query = () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(phoneQuery) : null);
+  const [phone, setPhone] = useState(() => !!query()?.matches);
+  useEffect(() => {
+    const mq = query();
+    if (!mq) return undefined;
+    const on = () => setPhone(mq.matches);
+    mq.addEventListener?.('change', on);
+    return () => mq.removeEventListener?.('change', on);
+  }, []);
+  return phone;
+}
 
 /**
  * Animated toast stack rendered from useSession().toasts.
  * Toasts that leave the session list are kept briefly with an exit animation.
  * Top-right on desktop, top-center on mobile (see Layout.css).
  */
-// Oldest first: a burst (XP, streak, achievements) queues behind the cap instead of
-// pushing the first and most important toast (+XP) off screen before it is seen.
-function visible(items) {
-  let shown = 0;
-  return items.filter((t) => t.leaving || shown++ < MAX_VISIBLE);
-}
-
 export default function Toasts() {
   const { toasts = [] } = useSession() || {};
   const [items, setItems] = useState([]); // [{...toast, leaving}]
   const [dismissed, setDismissed] = useState(() => new Set());
   const timers = useRef(new Map());
+  const phone = useIsPhone();
 
   useEffect(() => {
     const live = new Set(toasts.filter((t) => !dismissed.has(t.id)).map((t) => t.id));
@@ -61,7 +77,7 @@ export default function Toasts() {
   return (
     <div className="pn-toasts" role="region" aria-label="Notifications">
       <div aria-live="polite" aria-atomic="false" className="pn-toasts-inner">
-        {visible(items).map((t) => {
+        {visible(items, phone ? MAX_VISIBLE_PHONE : MAX_VISIBLE).map((t) => {
           const kind = KINDS.has(t.kind) ? t.kind : 'info';
           return (
             <div key={t.id} className={`pn-toast pn-toast-${kind}${t.leaving ? ' is-leaving' : ''}`} role="status">

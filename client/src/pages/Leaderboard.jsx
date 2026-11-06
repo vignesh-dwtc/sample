@@ -149,7 +149,9 @@ export default function Leaderboard() {
             <div className="lb-empty-icon" aria-hidden="true">{meta.icon}</div>
             <h2>No scores yet</h2>
             <p className="muted">
-              Nobody has played {meta.name} {period === 'today' ? 'today' : period === 'week' ? 'this week' : 'yet'}. Claim the top spot!
+              {isXp
+                ? 'Nobody has earned XP yet.'
+                : `Nobody has played ${meta.name} ${period === 'today' ? 'today' : period === 'week' ? 'this week' : 'yet'}.`} Claim the top spot!
             </p>
             <Link to={PLAY_LINK[game]} className="btn">Play {isXp ? 'now' : meta.name}</Link>
           </div>

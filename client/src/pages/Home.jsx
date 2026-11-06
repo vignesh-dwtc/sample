@@ -189,7 +189,7 @@ function MoreGames({ stats }) {
           </form>
           <div className="hm-host" role="group" aria-label="Host a room">
             <Link to="/party?create=trivia" className="btn secondary">🧠 Host Trivia</Link>
-            <Link to="/party?create=reaction" className="btn secondary">⚡ Host Reaction</Link>
+            <Link to="/party?create=reaction" className="btn secondary">🚦 Host Reaction</Link>
           </div>
         </div>
 

@@ -46,8 +46,9 @@ leaderboardRouter.get('/', requireAuth, ah(async (req, res) => {
   const date = today();
   let rows;
   if (game === 'xp') {
+    // Every first visit creates a guest; untouched 0-XP accounts would only pad the board.
     ({ rows } = await query(
-      `SELECT id, username, avatar, xp AS score FROM users ORDER BY xp DESC, created_at LIMIT 50`));
+      `SELECT id, username, avatar, xp AS score FROM users WHERE xp > 0 ORDER BY xp DESC, created_at LIMIT 50`));
   } else {
     const from = period === 'today' ? date : period === 'week' ? addDays(date, -6) : '1970-01-01';
     const games = game === 'party' ? ['party_trivia', 'party_reaction'] : [game];
@@ -68,7 +69,7 @@ leaderboardRouter.get('/', requireAuth, ah(async (req, res) => {
     if (game === 'xp') {
       ({ rows: [mine] } = await query(
         `SELECT * FROM (SELECT id, username, avatar, xp AS score,
-           row_number() OVER (ORDER BY xp DESC, created_at)::int AS rank FROM users) r WHERE id=$1`,
+           row_number() OVER (ORDER BY xp DESC, created_at)::int AS rank FROM users WHERE xp > 0) r WHERE id=$1`,
         [req.user.id]));
     } else {
       const from = period === 'today' ? date : period === 'week' ? addDays(date, -6) : '1970-01-01';
