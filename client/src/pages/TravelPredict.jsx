@@ -17,6 +17,14 @@ const SKEY = 'playnest.predict.setup';
 const load = (k, fb = null) => { try { return JSON.parse(localStorage.getItem(k)) ?? fb; } catch { return fb; } };
 const store = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch { /* blocked */ } };
 const uid = () => Math.random().toString(36).slice(2, 10);
+const num = Number.isFinite;
+// Saved state can be stale or corrupted: only accept the shapes we wrote.
+const validRound = (r) => (r && typeof r === 'object' && typeof r.id === 'string' && (r.status === 'running' || r.status === 'done')
+  && num(r.startAt) && num(r.endAt) && num(r.minutes) && num(r.predictedKm) && (r.status === 'running' || num(r.actualKm))
+  ? { ...r, track: Array.isArray(r.track) ? r.track.filter((p) => Array.isArray(p) && num(p[0]) && num(p[1]) && num(p[2])) : [] } : null);
+const validArrival = (a) => (a && typeof a === 'object' && typeof a.id === 'string' && num(a.predictedAt) && num(a.guessedAt)
+  && (a.status === 'waiting' || (a.status === 'done' && num(a.actualAt) && num(a.score))) ? a : null);
+const validHistory = (h) => (Array.isArray(h) ? h.filter((x) => x && typeof x === 'object' && x.id && num(x.predictedKm)) : []);
 
 function useNow(ms = 1000) {
   const [now, setNow] = useState(Date.now());
@@ -36,9 +44,9 @@ function Predictor() {
   const { position, geoStatus, trip } = useTravel();
   const { celebrate } = useSession() || {};
   const now = useNow();
-  const [round, setRoundState] = useState(() => load(RKEY));
-  const [arrival, setArrivalState] = useState(() => load(AKEY));
-  const [history, setHistory] = useState(() => load(HKEY, []));
+  const [round, setRoundState] = useState(() => validRound(load(RKEY)));
+  const [arrival, setArrivalState] = useState(() => validArrival(load(AKEY)));
+  const [history, setHistory] = useState(() => validHistory(load(HKEY, [])));
   const setRound = (r) => { store(RKEY, r); setRoundState(r); };
   const setArrival = (a) => { store(AKEY, a); setArrivalState(a); };
   const [saved, setSaved] = useState({});
@@ -66,7 +74,9 @@ function Predictor() {
     const last = track[track.length - 1];
     const at = position.at || Date.now();
     if (at < round.startAt || at > round.endAt + 90000) return;
-    if (last && at - last[2] < 5000 && distanceKm({ lat: last[0], lon: last[1] }, position) < 0.03) return;
+    // Only record real movement: a parked phone's GPS wanders by tens of metres, which would add
+    // phantom distance (and could make a stationary round look "moving").
+    if (last && distanceKm({ lat: last[0], lon: last[1] }, position) < Math.max(0.03, Math.min(0.2, (position.accuracy || 0) / 1000))) return;
     setRound({ ...round, startPos: round.startPos || { lat: position.lat, lon: position.lon, at }, track: [...track, [position.lat, position.lon, at]].slice(-600) });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [position]);
@@ -99,7 +109,7 @@ function Predictor() {
   const dest = trip?.destination;
   const destKm = dest && position ? distanceKm(position, dest) : null;
   useEffect(() => {
-    if (!arrival || arrival.status !== 'waiting' || !dest || arrival.tripId !== trip?.id) return;
+    if (!arrival || arrival.status !== 'waiting' || !dest || arrival.tripId !== trip?.id || arrival.destKey !== `${dest.lat},${dest.lon}`) return;
     let at = arrivalTimeFromPoints(tripPoints, dest, arrival.guessedAt);
     if (!at && destKm != null && destKm <= ARRIVE_RADIUS_KM) at = position.at || Date.now();
     if (!at) return;
@@ -129,14 +139,14 @@ function Predictor() {
               track: position ? [[position.lat, position.lon, t]] : [] });
           }} />
       )}
-      <ArrivalGuess trip={trip} dest={dest} destKm={destKm} speedKmh={speedKmh} arrival={arrival} setArrival={setArrival} now={now} saveState={arrival && saved[`arrive:${arrival.id}`]} />
+      <ArrivalGuess trip={trip} dest={dest} destKm={destKm} speedKmh={speedKmh} arrival={arrival} setArrival={setArrival} now={now} saveState={arrival && saved[`arrive:${arrival.id}`]} queuePending={q.pending} />
       {history.length > 0 && <History items={history} />}
     </div>
   );
 }
 
 function SetupRound({ disabled, position, speedKmh, moving, onStart }) {
-  const init = load(SKEY, {});
+  const init = load(SKEY, {}) || {};
   const [minutes, setMinutes] = useState(ROUND_MINUTES.includes(init.minutes) ? init.minutes : 10);
   const [expert, setExpert] = useState(!!init.expert);
   const [km, setKm] = useState('');
@@ -225,7 +235,8 @@ function SaveLine({ practice, noData, still, saveState, queue }) {
   if (practice) return <p className="muted small">Practice round — not scored.</p>;
   if (still) return <p className="alert">You were barely moving this round, so it wasn't scored. Try again once you're on the move!</p>;
   if (noData) return <p className="alert">No GPS readings during the round, so it wasn't scored. Keep location on and try again.</p>;
-  if (saveState === 'saved') return <p className="pd-saved small">✓ Score saved</p>;
+  // Nothing left in the queue = sent (possibly by another open tab, which then gets the result event).
+  if (saveState === 'saved' || (!saveState && queue.pending === 0)) return <p className="pd-saved small">✓ Score saved</p>;
   if (saveState?.startsWith('error:')) return <p className="alert error small">{saveState.slice(6)}</p>;
   return <p className="muted small">{queue.offline ? '📴 Offline — score saved on this phone, it will sync when you have signal.' : 'Saving score…'}</p>;
 }
@@ -251,7 +262,7 @@ function RoundResult({ round, saveState, queue, onAgain }) {
   );
 }
 
-function ArrivalGuess({ trip, dest, destKm, speedKmh, arrival, setArrival, now, saveState }) {
+function ArrivalGuess({ trip, dest, destKm, speedKmh, arrival, setArrival, now, saveState, queuePending }) {
   const [time, setTime] = useState('');
   if (!trip || !dest) {
     return (
@@ -305,7 +316,7 @@ function ArrivalGuess({ trip, dest, destKm, speedKmh, arrival, setArrival, now, 
               <div><span className="muted small">Arrived</span><b>{formatTime(mine.actualAt)}</b></div>
             </div>
             <div className="pd-score"><b>{mine.score}</b><span>/100</span></div>
-            <p className="small muted">{saveState === 'saved' ? '✓ Score saved' : saveState?.startsWith('error:') ? saveState.slice(6) : 'Saving (syncs when online)…'}</p>
+            <p className="small muted">{saveState === 'saved' || (!saveState && queuePending === 0) ? '✓ Score saved' : saveState?.startsWith('error:') ? saveState.slice(6) : 'Saving (syncs when online)…'}</p>
             <button type="button" className="btn small secondary" onClick={() => setArrival(null)}>New guess</button>
           </div>
         );

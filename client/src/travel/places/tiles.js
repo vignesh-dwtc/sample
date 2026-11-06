@@ -11,16 +11,25 @@ const TIMEOUT_MS = 8000;
 const hasCache = () => typeof caches !== 'undefined' && typeof window !== 'undefined' && window.isSecureContext;
 let puts = 0;
 
-async function trim(cache) {
-  const keys = await cache.keys();
-  if (keys.length > MAX_TILES) await Promise.all(keys.slice(0, keys.length - MAX_TILES).map((k) => cache.delete(k)));
+let trimming = null;
+/** Keep at most `max` tiles (oldest first out). Serialised so concurrent trims don't pile up. */
+function trim(cache, max = MAX_TILES) {
+  if (trimming) return trimming;
+  trimming = (async () => {
+    const keys = await cache.keys();
+    if (keys.length > max) await Promise.all(keys.slice(0, keys.length - max).map((k) => cache.delete(k)));
+  })().catch(() => {}).finally(() => { trimming = null; });
+  return trimming;
 }
+let trimmedOnce = false;
 
 /** Resolve a tile URL to something an <img> can show: a blob: URL (cached or fresh) or the plain URL. */
 async function loadTile(url) {
   if (!hasCache()) return { src: url, cached: false };
   let cache;
   try { cache = await caches.open(CACHE); } catch { return { src: url, cached: false }; }
+  // Enforce the cap once per page load too (a previous session may have stopped mid-way).
+  if (!trimmedOnce) { trimmedOnce = true; trim(cache); }
   const fromCache = async () => {
     const hit = await cache.match(url);
     if (!hit) throw new Error('tile not cached');
@@ -34,7 +43,9 @@ async function loadTile(url) {
     if (!res.ok) throw new Error(`tile ${res.status}`);
     const blob = await res.blob();
     cache.put(url, new Response(blob, { headers: { 'Content-Type': blob.type || 'image/png' } }))
-      .then(() => { if (++puts % 60 === 0) trim(cache); }).catch(() => {});
+      .then(() => { if (++puts % 25 === 0) trim(cache); })
+      // Storage full (QuotaExceededError) or blocked: shrink hard so later tiles can still be saved.
+      .catch(() => trim(cache, Math.floor(MAX_TILES / 2)));
     return { src: URL.createObjectURL(blob), cached: false, blob: true };
   } catch {
     return fromCache();
@@ -48,7 +59,16 @@ export const CachedTileLayer = L.TileLayer.extend({
     img.setAttribute('role', 'presentation');
     const url = this.getTileUrl(coords);
     loadTile(url).then(({ src, cached, blob }) => {
-      if (blob) img._pnBlob = src;
+      // Tile was dropped (panned/zoomed away) before it resolved: free the blob and stop.
+      if (img._pnGone) { if (blob) URL.revokeObjectURL(src); return; }
+      if (blob) {
+        img._pnBlob = src;
+        // The decoded image stays on screen after revoking; this frees the blob even when Leaflet
+        // aborts a loading tile on zoom (it swaps src without calling _removeTile).
+        const free = () => { URL.revokeObjectURL(src); img._pnBlob = null; };
+        img.addEventListener('load', free, { once: true });
+        img.addEventListener('error', free, { once: true });
+      }
       img._pnCached = cached;
       img.onload = () => done(null, img);
       img.onerror = (e) => done(e || new Error('tile'), img);
@@ -58,7 +78,10 @@ export const CachedTileLayer = L.TileLayer.extend({
   },
   _removeTile(key) {
     const tile = this._tiles[key];
-    if (tile?.el?._pnBlob) URL.revokeObjectURL(tile.el._pnBlob);
+    if (tile?.el) {
+      tile.el._pnGone = true;
+      if (tile.el._pnBlob) { URL.revokeObjectURL(tile.el._pnBlob); tile.el._pnBlob = null; }
+    }
     L.TileLayer.prototype._removeTile.call(this, key);
   },
 });

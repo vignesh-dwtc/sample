@@ -42,6 +42,7 @@ function Quiz() {
   const [answers, setAnswers] = useState([]); // [{ choice, points }]
   const loadRef = useRef(null);
   const fromRef = useRef(null);
+  const submittedRef = useRef(null);
 
   useEffect(() => () => loadRef.current?.abort(), []);
 
@@ -91,6 +92,8 @@ function Quiz() {
 
   const next = () => {
     if (idx + 1 < quiz.questions.length) { setIdx(idx + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    if (submittedRef.current === quiz) return; // double tap on "See my score"
+    submittedRef.current = quiz;
     const pts = answers.map((a) => a?.points || 0);
     const score = totalScore(pts, quiz.questions.length);
     setPhase('done');

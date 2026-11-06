@@ -72,7 +72,9 @@ function LiveMap() {
     let loaded = 0, failed = 0, timer = null;
     const flush = () => { timer = null; setTiles({ loaded, failed }); };
     const bump = () => { if (!timer) timer = setTimeout(flush, 400); };
-    tl.on('loading', () => { loaded = 0; failed = 0; bump(); });
+    // `loaded` counts every tile shown since the map opened (cached ones stay on screen offline);
+    // `failed` is per batch, so one dead zone doesn't hide a map that is still visible.
+    tl.on('loading', () => { failed = 0; bump(); });
     tl.on('tileload', () => { loaded++; bump(); });
     tl.on('tileerror', () => { failed++; bump(); });
     const L_ = layers.current;
@@ -107,7 +109,8 @@ function LiveMap() {
     if (!map) return;
     if (dest) {
       dm.setLatLng([dest.lat, dest.lon]);
-      dm.unbindTooltip().bindTooltip(dest.name || 'Destination', { direction: 'top', offset: [0, -28] });
+      // Leaflet treats a string as HTML; the name comes from Nominatim/user input, so pass a text node.
+      dm.unbindTooltip().bindTooltip(document.createTextNode(dest.name || 'Destination'), { direction: 'top', offset: [0, -28] });
       if (!map.hasLayer(dm)) dm.addTo(map);
       toDest.setLatLngs(here ? [here, [dest.lat, dest.lon]] : []);
     } else { dm.remove(); toDest.setLatLngs([]); }

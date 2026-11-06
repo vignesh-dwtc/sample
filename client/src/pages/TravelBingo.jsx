@@ -14,6 +14,15 @@ const load = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch 
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage blocked */ } };
 
 const freshCard = (mode, cardNo = 1) => ({ mode, cardNo, marked: [], scored: [], best: 0 });
+const ints = (a, max) => (Array.isArray(a) ? [...new Set(a.filter((i) => Number.isInteger(i) && i >= 0 && i < max))] : []);
+/** Saved card for this trip + mode, or null. Corrupted fields are repaired rather than crashing the page. */
+function loadCard(tripKey, mode) {
+  // Cards are kept per mode, so trying another mode doesn't wipe a half-filled card.
+  // (Older builds saved one card per trip; reuse it if the mode matches.)
+  const c = load(SKEY(`${tripKey}.${mode}`)) || load(SKEY(tripKey));
+  if (!c || typeof c !== 'object' || c.mode !== mode) return null;
+  return { mode, cardNo: Number.isInteger(c.cardNo) && c.cardNo > 0 ? c.cardNo : 1, marked: ints(c.marked, 25).filter((i) => i !== FREE_INDEX).sort((a, b) => a - b), scored: ints(c.scored, LINES.length), best: Number(c.best) || 0 };
+}
 
 export default function TravelBingo() {
   return (
@@ -30,7 +39,8 @@ function Bingo() {
   const [soloMode, setSoloMode] = useState(() => { const m = load(MODE_KEY); return BINGO_MODES.includes(m) ? m : 'road'; });
   const mode = trip && BINGO_MODES.includes(trip.mode) ? trip.mode : soloMode;
 
-  const [card, setCard] = useState(() => load(SKEY(tripKey)));
+  const cardKey = SKEY(`${tripKey}.${mode}`);
+  const [card, setCard] = useState(() => loadCard(tripKey, mode));
   const [banner, setBanner] = useState(null);
   const [flash, setFlash] = useState([]);
   const [lastStamp, setLastStamp] = useState(-1);
@@ -40,10 +50,10 @@ function Bingo() {
 
   // (Re)load when the trip changes; start a fresh card if none exists or the mode changed.
   useEffect(() => {
-    const saved = load(SKEY(tripKey));
-    if (saved && saved.mode === mode && Array.isArray(saved.marked)) setCard(saved);
-    else { const c = freshCard(mode, (saved?.cardNo || 0) + 1); store(SKEY(tripKey), c); setCard(c); }
-  }, [tripKey, mode]);
+    const saved = loadCard(tripKey, mode);
+    if (saved) setCard(saved);
+    else { const c = freshCard(mode, 1); store(cardKey, c); setCard(c); }
+  }, [tripKey, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => () => clearTimeout(bannerTimer.current), []);
 
@@ -62,7 +72,7 @@ function Bingo() {
   const score = bingoScore(marked, lines.length);
   const full = count === 24;
 
-  const update = (next) => { store(SKEY(tripKey), next); setCard(next); };
+  const update = (next) => { store(cardKey, next); setCard(next); };
 
   const tap = (i) => {
     if (!card || i === FREE_INDEX) return;
@@ -78,7 +88,7 @@ function Bingo() {
       const s = bingoScore(nextMarked, nowLines.length);
       const isFull = markedCount(nextMarked) === 24;
       next.best = Math.max(card.best || 0, s);
-      queueScore('travel_bingo', s, { lines: nowLines.length, full: isFull, mode }, `bingo:${seed}`);
+      queueScore('travel_bingo', s, { lines: nowLines.length, full: isFull, mode }, `bingo:${mode}:${seed}`);
       setSaveMsg(navigator.onLine === false ? '📴 Offline — score saved on this phone, will sync later' : 'Saving score…');
       const cheer = isFull ? 'FULL CARD!' : BINGO_CHEERS[(card.scored.length + fresh.length - 1) % BINGO_CHEERS.length];
       setBanner({ title: cheer, sub: isFull ? 'You spotted everything. Legend!' : `${fresh.map(lineName).join(' + ')} · ${nowLines.length} line${nowLines.length > 1 ? 's' : ''}`, key: Date.now() });
@@ -125,11 +135,11 @@ function Bingo() {
       </div>
 
       <div className="bg-board-wrap">
-        <div className={`bg-board ${full ? 'full' : ''}`} role="grid" aria-label="Bingo card">
+        <div className={`bg-board ${full ? 'full' : ''}`} role="group" aria-label="Bingo card">
           {cells.map((c, i) => {
             const on = i === FREE_INDEX || marked.includes(i);
             return (
-              <button key={`${seed}-${i}`} type="button" role="gridcell"
+              <button key={`${seed}-${i}`} type="button"
                 className={`bg-cell ${on ? 'on' : ''} ${c.free ? 'free' : ''} ${inLine.has(i) ? 'line' : ''} ${flash.includes(i) ? 'flash' : ''} ${lastStamp === i ? 'stamp' : ''}`}
                 aria-pressed={on} aria-label={`${c.t}${on ? ', spotted' : ''}`} onClick={() => tap(i)} disabled={c.free}>
                 <span className="bg-emoji" aria-hidden="true">{c.e}</span>

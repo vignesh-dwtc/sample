@@ -64,7 +64,8 @@ async function geosearch(pos, signal) {
   signal?.addEventListener('abort', abort);
   const t = setTimeout(abort, TIMEOUT_MS);
   try {
-    const res = await fetch(geosearchUrl(pos), { signal: ctrl.signal });
+    // Wikimedia API etiquette: browsers can't set User-Agent, so identify the app with Api-User-Agent.
+    const res = await fetch(geosearchUrl(pos), { signal: ctrl.signal, headers: { 'Api-User-Agent': 'PlayNest/1.0 (https://playnest-yz8u.onrender.com)' } });
     if (!res.ok) throw new Error(`Wikipedia ${res.status}`);
     return parseGeosearch(await res.json());
   } finally { clearTimeout(t); signal?.removeEventListener('abort', abort); }

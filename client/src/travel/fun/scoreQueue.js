@@ -32,10 +32,15 @@ export function nextToSend(queue, lastSent, now) {
   return best;
 }
 
-let queue = read(QKEY, []);
-if (!Array.isArray(queue)) queue = [];
-queue = queue.map((x) => ({ ...x, sending: false }));
-let lastSent = read(LKEY, {}) || {};
+// localStorage is the single source of truth (two open tabs share it); `queue` is a mirror.
+const SKEY = 'playnest.fun.sent';
+const readQueue = () => { const v = read(QKEY, []); return Array.isArray(v) ? v.filter((x) => x && typeof x === 'object' && x.id && x.game) : []; };
+const readObj = (k) => { const v = read(k, {}); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; };
+const readSent = () => { const v = read(SKEY, []); return Array.isArray(v) ? v : []; };
+const sentId = (item) => (item.key ? `${item.key}|${item.score}` : '');
+
+let queue = readQueue();
+let lastSent = readObj(LKEY);
 let status = { pending: queue.length, offline: false };
 const listeners = new Set();
 const resultListeners = new Set();
@@ -43,7 +48,12 @@ let timer = null;
 let busy = false;
 
 const emit = () => { status = { pending: queue.length, offline: status.offline }; listeners.forEach((l) => l()); };
-const saveQ = () => { write(QKEY, queue.map(({ sending, ...x }) => x)); emit(); };
+const saveQ = () => { write(QKEY, queue); emit(); };
+
+/** Run fn while holding a cross-tab lock (Web Locks), so two tabs never send the same item. */
+const withLock = (fn) => (typeof navigator !== 'undefined' && navigator.locks?.request
+  ? navigator.locks.request('playnest.fun.queue', fn)
+  : fn());
 
 function schedule(ms) {
   clearTimeout(timer);
@@ -56,43 +66,56 @@ function withTimeout(p) {
     .finally(() => clearTimeout(id));
 }
 
-async function pump() {
-  if (busy || !queue.length) return;
-  const now = Date.now();
-  const next = nextToSend(queue, lastSent, now);
-  if (!next) return;
-  if (next.wait > 0) { schedule(next.wait); return; }
+async function sendOne() {
+  queue = readQueue(); lastSent = readObj(LKEY);
+  if (!queue.length) { emit(); return; }
+  const next = nextToSend(queue, lastSent, Date.now());
+  if (!next || next.wait > 0) { emit(); return; }
   const { item } = next;
-  busy = true; item.sending = true;
   lastSent = { ...lastSent, [item.game]: Date.now() }; write(LKEY, lastSent);
+  const patch = (fn) => { queue = readQueue().map((x) => (x.id === item.id ? fn(x) : x)); };
   try {
     const r = await withTimeout(submitTravelScore(item.game, item.score, item.data));
-    queue = queue.filter((x) => x.id !== item.id);
+    queue = readQueue().filter((x) => x.id !== item.id);
+    if (sentId(item)) write(SKEY, [...readSent().filter((k) => k !== sentId(item)), sentId(item)].slice(-50));
     status.offline = false;
     saveQ();
     resultListeners.forEach((l) => l({ item, progress: r.progress, ok: true }));
   } catch (e) {
-    item.sending = false;
     if (e.status === 429) {
-      item.notBefore = Date.now() + GAP_MS;
+      patch((x) => ({ ...x, notBefore: Date.now() + GAP_MS }));
     } else if (e.status && e.status >= 400 && e.status < 500 && e.status !== 401 && e.status !== 408) {
-      queue = queue.filter((x) => x.id !== item.id); // invalid — drop it, never retry forever
+      queue = readQueue().filter((x) => x.id !== item.id); // invalid — drop it, never retry forever
       resultListeners.forEach((l) => l({ item, ok: false, error: e.message }));
     } else {
-      item.notBefore = Date.now() + OFFLINE_RETRY_MS;
+      patch((x) => ({ ...x, notBefore: Date.now() + OFFLINE_RETRY_MS }));
       status.offline = true;
-      lastSent = { ...lastSent, [item.game]: 0 }; write(LKEY, lastSent);
+      lastSent = { ...readObj(LKEY), [item.game]: 0 }; write(LKEY, lastSent);
     }
     saveQ();
-  } finally {
-    busy = false;
-    if (queue.length) schedule(nextToSend(queue, lastSent, Date.now())?.wait ?? GAP_MS);
   }
 }
 
-/** Queue a score. `key` collapses repeat submits (e.g. the same bingo card) into the latest one. */
+async function pump() {
+  if (busy) return;
+  queue = readQueue();
+  if (!queue.length) { emit(); return; }
+  busy = true;
+  try { await withLock(sendOne); } catch { /* lock/storage failure: retry later */ } finally {
+    busy = false;
+    queue = readQueue();
+    if (queue.length) schedule(nextToSend(queue, readObj(LKEY), Date.now())?.wait ?? GAP_MS);
+  }
+}
+
+/**
+ * Queue a score. `key` collapses repeat submits (e.g. the same bingo card) into the latest one,
+ * and a key+score that was already sent (e.g. by another tab) is not sent again.
+ */
 export function queueScore(game, score, data = {}, key = '') {
   const item = { id: Math.random().toString(36).slice(2, 10), game, score: Math.max(0, Math.min(100, Math.round(score))), data, key, at: Date.now() };
+  queue = readQueue();
+  if (key && (readSent().includes(sentId(item)) || queue.some((x) => x.key === key && x.score === item.score))) { emit(); return null; }
   queue = enqueueItem(queue, item);
   saveQ();
   pump();
@@ -100,12 +123,15 @@ export function queueScore(game, score, data = {}, key = '') {
 }
 
 export function flushQueue() {
-  queue.forEach((x) => { if (!x.sending) x.notBefore = 0; });
+  queue = readQueue().map((x) => ({ ...x, notBefore: 0 }));
+  saveQ();
   pump();
 }
 
 if (typeof window !== 'undefined') {
   window.addEventListener('online', flushQueue);
+  // Another tab changed the queue: refresh our mirror (the pending count shown on screen).
+  window.addEventListener('storage', (e) => { if (e.key === QKEY) { queue = readQueue(); emit(); } });
   if (queue.length) setTimeout(pump, 500);
 }
 

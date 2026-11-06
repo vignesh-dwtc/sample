@@ -28,9 +28,12 @@ export function useQuizSubmit(celebrate) {
   const set = (s) => alive.current && s.id === current.current && setState(s);
 
   const inflight = useRef(new Set());
+  const flushRef = useRef(null);
 
-  const send = useCallback(async (item, attempt = 0) => {
+  const send = useCallback(async (item, attempt = 0, queued = false) => {
     if (inflight.current.has(item.id)) return; // e.g. two 'online' events in a row
+    // A queued score may also be flushed by another open tab: the first one to get the lock sends it.
+    if (queued && !readQ().some((x) => x.id === item.id)) return;
     inflight.current.add(item.id);
     set({ status: 'saving', id: item.id });
     try {
@@ -38,6 +41,8 @@ export function useQuizSubmit(celebrate) {
       writeQ(readQ().filter((x) => x.id !== item.id));
       set({ status: 'saved', progress: r.progress, id: item.id });
       cel.current?.(r.progress);
+      // More saved on this phone? Send the next one after the server's 15 s per-game limit.
+      if (readQ().length) { clearTimeout(timer.current); timer.current = setTimeout(() => flushRef.current?.(), 16000); }
     } catch (e) {
       if (e.status === 429 && attempt < 4) {
         set({ status: 'waiting', message: 'Saving in a few seconds…', id: item.id });
@@ -66,9 +71,13 @@ export function useQuizSubmit(celebrate) {
     alive.current = true;
     const flush = () => {
       if (navigator.onLine === false) return;
-      const [next] = readQ();
-      if (next) send(next);
+      const [first] = readQ();
+      if (!first) return;
+      if (navigator.locks?.request) {
+        navigator.locks.request(QKEY, () => { const [next] = readQ(); return next ? send(next, 0, true) : null; }).catch(() => {});
+      } else send(first, 0, true);
     };
+    flushRef.current = flush;
     const t = setTimeout(flush, 1500);
     window.addEventListener('online', flush);
     return () => { alive.current = false; clearTimeout(t); clearTimeout(timer.current); window.removeEventListener('online', flush); };
