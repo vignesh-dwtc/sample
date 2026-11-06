@@ -1,0 +1,32 @@
+# Keeps the Render free-plan server awake. Render sleeps a free web service after
+# 15 minutes without traffic; pinging it every 10 minutes avoids the slow "waking up" screen.
+# Override the URL with a repository variable named KEEPALIVE_URL (Settings → Secrets and variables → Actions → Variables).
+name: Keep server awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # GitHub may delay scheduled runs by a few minutes at busy times
+  workflow_dispatch:          # lets you run it by hand from the Actions tab
+
+concurrency:
+  group: keep-alive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping /api/health
+        env:
+          URL: ${{ vars.KEEPALIVE_URL || 'https://playnest-yz8u.onrender.com' }}
+        run: |
+          # A sleeping service can take ~60s to wake, so allow a long timeout and a few retries.
+          for attempt in 1 2 3; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 "$URL/api/health" || echo 000)
+            echo "Attempt $attempt: HTTP $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 10
+          done
+          echo "::warning::Server did not answer with 200 after 3 attempts ($URL)"
+          exit 1
