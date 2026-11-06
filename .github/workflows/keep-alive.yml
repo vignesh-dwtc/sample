@@ -4,13 +4,10 @@
 name: Keep server awake
 
 on:
-  # Runs every 14 minutes from 09:58 to 02:58 India time (IST = UTC+5:30) and pauses
-  # overnight, so the server sleeps from about 03:00 to 10:00 IST. Cron below is in UTC.
+  # Runs every 14 minutes, around the clock (minutes 0,14,28,42,56 of every hour).
   # GitHub may delay scheduled runs by a few minutes at busy times.
   schedule:
-    - cron: "28,42,56 4 * * *"   # 09:58, 10:12, 10:26 IST
-    - cron: "*/14 5-20 * * *"    # 10:30 IST → 02:26 IST
-    - cron: "0,14,28 21 * * *"   # 02:30, 02:44, 02:58 IST (last ping)
+    - cron: "*/14 * * * *"
   workflow_dispatch:          # lets you run it by hand from the Actions tab
 
 concurrency:
