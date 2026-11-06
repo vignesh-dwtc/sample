@@ -1,11 +1,11 @@
 # Keeps the Render free-plan server awake. Render sleeps a free web service after
-# 15 minutes without traffic; pinging it every 10 minutes avoids the slow "waking up" screen.
+# 15 minutes without traffic; pinging it every 14 minutes avoids the slow "waking up" screen.
 # Override the URL with a repository variable named KEEPALIVE_URL (Settings → Secrets and variables → Actions → Variables).
 name: Keep server awake
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   # GitHub may delay scheduled runs by a few minutes at busy times
+    - cron: "*/14 * * * *"   # minutes 0,14,28,42,56; GitHub may delay scheduled runs by a few minutes at busy times
   workflow_dispatch:          # lets you run it by hand from the Actions tab
 
 concurrency:
