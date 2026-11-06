@@ -1,0 +1,63 @@
+/* Reflex — prefix .rx- */
+.rx-game { display: flex; flex-direction: column; gap: 14px; }
+.rx-hud { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; }
+.rx-hud-item { display: flex; flex-direction: column; align-items: center; min-width: 56px; line-height: 1.1; }
+.rx-hud-n { font-size: 1.8rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.rx-hud .rx-hud-item:last-child .rx-hud-n { animation: pop 0.2s ease both; color: var(--accent); }
+.rx-timer { height: 12px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--border); overflow: hidden; }
+.rx-timer span { display: block; height: 100%; transform-origin: left; background: linear-gradient(90deg, var(--accent), var(--primary)); }
+.rx-hud.hurry .rx-timer span { background: linear-gradient(90deg, var(--danger), var(--warn)); }
+.rx-hud.hurry .rx-hud-item:first-child .rx-hud-n { color: var(--danger); animation: rx-pulse 1s ease infinite; }
+@keyframes rx-pulse { 50% { transform: scale(1.15); } }
+
+.rx-arena { position: relative; width: min(100%, 440px); margin: 0 auto; }
+.rx-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 12px;
+  background: radial-gradient(circle at 50% 40%, #1c1f44, #0b0c1a); border: 1px solid var(--border);
+  border-radius: 22px; box-shadow: var(--shadow); touch-action: manipulation; user-select: none;
+}
+.rx-grid.idle { filter: saturate(0.6) brightness(0.8); }
+.rx-cell {
+  position: relative; aspect-ratio: 1; border-radius: 16px; border: 1px solid #2a2e5a; padding: 0;
+  background: radial-gradient(circle at 35% 30%, #262a52, #15172f); cursor: pointer;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.35); -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease;
+}
+.rx-cell:active { background: radial-gradient(circle at 35% 30%, #2f3466, #1a1d3a); }
+.rx-cell.missed { animation: rx-miss 0.35s ease; }
+@keyframes rx-miss { 0%, 100% { background: radial-gradient(circle at 35% 30%, #262a52, #15172f); } 30% { background: rgba(255, 92, 122, 0.55); } }
+
+.rx-target {
+  position: absolute; inset: 12%; border-radius: 50%; display: block; pointer-events: none;
+  background: radial-gradient(circle at 38% 32%, #c9fff0 0%, var(--accent) 45%, #0f8f6f 100%);
+  box-shadow: 0 0 18px rgba(34, 211, 166, 0.55);
+  animation: rx-appear 0.16s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+.rx-target.gold {
+  background: radial-gradient(circle at 38% 32%, #fff7d1 0%, var(--gold) 45%, #d48a10 100%);
+  box-shadow: 0 0 22px rgba(255, 209, 102, 0.75);
+}
+.rx-target svg { position: absolute; inset: -9%; width: 118%; height: 118%; transform: rotate(-90deg); }
+.rx-target circle { fill: none; stroke: rgba(255, 255, 255, 0.85); stroke-width: 2.4; stroke-linecap: round; }
+@keyframes rx-appear { from { transform: scale(0.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.rx-fx {
+  position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); pointer-events: none;
+  font-weight: 800; font-size: 1.2rem; animation: rx-float 0.65s ease-out both; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+.rx-fx.hit { color: #d6fff3; }
+.rx-fx.gold { color: var(--gold); font-size: 1.45rem; }
+.rx-fx.miss { color: var(--danger); }
+@keyframes rx-float { from { opacity: 1; transform: translate(-50%, -30%) scale(0.9); } to { opacity: 0; transform: translate(-50%, -140%) scale(1.15); } }
+
+.rx-overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  border-radius: 22px; background: rgba(8, 9, 22, 0.55); backdrop-filter: blur(2px);
+}
+.rx-start { font-size: 1.25rem; padding: 16px 36px; min-height: 60px; box-shadow: 0 0 30px rgba(34, 211, 166, 0.45); }
+.rx-count { font-size: clamp(4rem, 22vw, 6.5rem); font-weight: 900; color: var(--text); animation: rx-count 0.75s ease both; text-shadow: 0 0 30px rgba(124, 92, 255, 0.8); }
+.rx-count.small-text { font-size: 3rem; animation: pop 0.3s ease both; }
+@keyframes rx-count { 0% { transform: scale(1.8); opacity: 0; } 30% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.85); opacity: 0.2; } }
+
+.rx-demo { display: inline-block; width: 16px; height: 16px; border-radius: 50%; vertical-align: -3px; background: var(--accent); }
+.rx-demo.gold { background: var(--gold); }

@@ -1,0 +1,50 @@
+/* Flip — prefix .fl- */
+.fl-game { display: flex; flex-direction: column; gap: 16px; }
+.fl-hud { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.fl-counter {
+  display: flex; flex-direction: column; align-items: center; padding: 8px; line-height: 1.1;
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.fl-counter-n { font-size: 1.6rem; font-weight: 800; animation: pop 0.2s ease both; }
+.fl-counter.over .fl-counter-n { color: var(--warn); }
+
+.fl-board {
+  display: grid; gap: 8px; padding: 12px; width: min(100%, 420px); margin: 0 auto;
+  background: radial-gradient(circle at 50% 30%, #1b1e3f, #0b0c1a); border: 1px solid var(--border);
+  border-radius: 22px; box-shadow: var(--shadow), inset 0 0 40px rgba(0, 0, 0, 0.5);
+}
+.fl-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.fl-cell {
+  aspect-ratio: 1; border-radius: 14px; border: 1px solid #2a2e5a; padding: 0; cursor: pointer;
+  background: radial-gradient(circle at 35% 30%, #2b2f5c, #181a36);
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.35);
+  transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.fl-cell.on {
+  background: radial-gradient(circle at 40% 35%, #fff6c9 0%, var(--gold) 38%, #e9a21c 100%);
+  border-color: #ffe79a;
+  box-shadow: 0 0 18px rgba(255, 209, 102, 0.65), 0 0 42px rgba(255, 181, 71, 0.25), inset 0 -4px 0 rgba(150, 90, 0, 0.35);
+}
+.fl-cell:not(:disabled):hover { border-color: var(--primary-2); }
+.fl-cell:not(:disabled):active { transform: scale(0.92); }
+.fl-cell:disabled { cursor: default; }
+.fl-cell.pressed0 { animation: fl-press0 0.28s ease; }
+.fl-cell.pressed1 { animation: fl-press1 0.28s ease; }
+.fl-cell.rippled0 { animation: fl-ripple0 0.32s ease; }
+.fl-cell.rippled1 { animation: fl-ripple1 0.32s ease; }
+/* Two identical copies so consecutive presses on the same cell restart the animation. */
+@keyframes fl-press0 { 40% { transform: scale(0.86); } 100% { transform: scale(1); } }
+@keyframes fl-press1 { 40% { transform: scale(0.86); } 100% { transform: scale(1); } }
+@keyframes fl-ripple0 { 40% { transform: scale(0.93); } 100% { transform: scale(1); } }
+@keyframes fl-ripple1 { 40% { transform: scale(0.93); } 100% { transform: scale(1); } }
+
+.fl-board.solved .fl-cell { animation: fl-wave 0.7s ease both; }
+@keyframes fl-wave {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.85); background: radial-gradient(circle at 40% 35%, #d9fff2, var(--accent)); box-shadow: 0 0 18px rgba(34, 211, 166, 0.6); }
+  100% { transform: scale(1); }
+}
+
+.fl-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fl-note { margin: 0; min-height: 1.5em; }

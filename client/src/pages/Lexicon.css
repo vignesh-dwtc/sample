@@ -1,0 +1,77 @@
+/* Lexicon — prefix .lx- */
+.lx-page { display: flex; flex-direction: column; }
+.lx-game { display: flex; flex-direction: column; gap: 20px; align-items: stretch; }
+.lx-board-wrap { position: relative; display: flex; justify-content: center; padding-top: 6px; }
+.lx-board { display: grid; grid-template-rows: repeat(6, 1fr); gap: 6px; width: min(100%, 330px); }
+.lx-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+
+.lx-tile {
+  aspect-ratio: 1; display: grid; place-items: center;
+  font-size: clamp(1.5rem, 7vw, 2rem); font-weight: 800; text-transform: uppercase;
+  border: 2px solid var(--border); border-radius: 10px; background: rgba(15, 16, 32, 0.4);
+  color: var(--text); user-select: none; perspective: 400px;
+}
+.lx-tile.filled:not(.shown):not(.flip) { border-color: var(--text-dim); animation: lx-type 0.12s ease; }
+@keyframes lx-type { 50% { transform: scale(1.1); } }
+
+.lx-tile.shown, .lx-tile.flip { border-color: transparent; color: #fff; }
+.lx-tile.shown.hit { background: var(--hit); }
+.lx-tile.shown.near { background: var(--near); }
+.lx-tile.shown.miss { background: var(--miss); }
+
+/* Reveal: flip down on the blank side, swap colour at the midpoint, flip back up. */
+.lx-tile.flip { animation: lx-flip 0.52s ease both; }
+.lx-tile.flip.hit { --lx-c: var(--hit); }
+.lx-tile.flip.near { --lx-c: var(--near); }
+.lx-tile.flip.miss { --lx-c: var(--miss); }
+@keyframes lx-flip {
+  0% { transform: rotateX(0); background: rgba(15, 16, 32, 0.4); border-color: var(--text-dim); }
+  49% { transform: rotateX(90deg); background: rgba(15, 16, 32, 0.4); border-color: var(--text-dim); }
+  50% { transform: rotateX(90deg); background: var(--lx-c); border-color: transparent; }
+  100% { transform: rotateX(0); background: var(--lx-c); border-color: transparent; }
+}
+
+.lx-shake { animation: lx-shake 0.45s ease; }
+@keyframes lx-shake {
+  10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-7px); } 40%, 60% { transform: translateX(7px); }
+}
+.lx-win .lx-tile { animation: lx-jump 0.5s ease both; }
+@keyframes lx-jump { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-18px); } 70% { transform: translateY(3px); } }
+
+.lx-answer { color: var(--text); letter-spacing: 0.12em; }
+
+.lx-keyboard { display: flex; flex-direction: column; gap: 7px; user-select: none; touch-action: manipulation; }
+.lx-krow { display: flex; gap: 5px; justify-content: center; }
+.lx-key {
+  flex: 1 1 0; max-width: 46px; min-width: 0; height: 56px; padding: 0;
+  border: none; border-radius: 8px; background: var(--surface-2); color: var(--text);
+  font: 700 1rem var(--font); text-transform: uppercase; cursor: pointer;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+  transition: background 0.25s ease, transform 0.08s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.lx-key:active { transform: translateY(1px) scale(0.96); }
+.lx-key:hover { filter: brightness(1.15); }
+.lx-key.wide { flex: 1.6 1 0; max-width: 72px; font-size: 0.8rem; }
+.lx-key[data-lx-key="back"] { font-size: 1.25rem; }
+.lx-key.hit { background: var(--hit); color: #fff; }
+.lx-key.near { background: var(--near); color: #fff; }
+.lx-key.miss { background: #1a1d3a; color: #6b70a3; }
+
+.lx-key-demo {
+  display: inline-grid; place-items: center; width: 26px; height: 26px; margin-right: 6px;
+  border-radius: 6px; font-weight: 800; color: #fff; vertical-align: middle;
+}
+.lx-key-demo.hit { background: var(--hit); }
+.lx-key-demo.near { background: var(--near); }
+.lx-key-demo.miss { background: var(--miss); }
+
+@media (max-width: 380px) {
+  .lx-krow { gap: 4px; }
+  .lx-key { height: 52px; font-size: 0.9rem; }
+}
+@media (max-height: 700px) {
+  .lx-board { width: min(100%, 270px); }
+  .lx-key { height: 48px; }
+}

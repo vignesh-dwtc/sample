@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { api, getToken, setToken } from './api.js';
 
 const SessionCtx = createContext(null);
@@ -13,6 +13,7 @@ export function SessionProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [toasts, setToasts] = useState([]);
+  const liveToasts = useRef(0);
 
   const refresh = useCallback(async () => {
     const p = await api('/profile');
@@ -34,8 +35,14 @@ export function SessionProvider({ children }) {
 
   const toast = useCallback((t) => {
     const id = Math.random().toString(36).slice(2);
+    // Layout shows at most 4 at once; toasts queued behind that get extra time so they are seen.
+    const queued = Math.max(0, liveToasts.current - 3);
+    liveToasts.current += 1;
     setToasts((ts) => [...ts, { id, ...t }]);
-    setTimeout(() => setToasts((ts) => ts.filter((x) => x.id !== id)), t.duration || 4000);
+    setTimeout(() => {
+      liveToasts.current -= 1;
+      setToasts((ts) => ts.filter((x) => x.id !== id));
+    }, (t.duration || 4000) + queued * 1500);
   }, []);
 
   const celebrate = useCallback((progress) => {

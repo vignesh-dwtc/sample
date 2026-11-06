@@ -1,0 +1,114 @@
+/* Leaderboard. Prefix: .lb- */
+.lb-page { display: flex; flex-direction: column; gap: 16px; max-width: 760px; }
+.lb-head h1 { margin-bottom: 4px; }
+.lb-head p { margin: 0; }
+
+.lb-tabs {
+  display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px;
+  margin: 0 -16px; padding-inline: 16px; scroll-padding-inline: 16px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 16px), transparent);
+  mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 16px), transparent);
+}
+.lb-tabs::-webkit-scrollbar { display: none; }
+.lb-tab {
+  flex: none; display: inline-flex; align-items: center; gap: 6px;
+  font: 600 0.95rem var(--font); color: var(--text-dim);
+  padding: 8px 14px; min-height: 40px; border-radius: 999px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--border);
+  transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.lb-tab:hover { color: var(--text); border-color: var(--primary); }
+.lb-tab:active { transform: scale(0.96); }
+.lb-tab.is-active { color: #fff; background: var(--primary); border-color: var(--primary); box-shadow: 0 6px 18px rgba(124, 92, 255, 0.4); }
+
+.lb-periods {
+  display: inline-grid; grid-template-columns: repeat(3, 1fr); align-self: flex-start;
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 999px; padding: 4px;
+}
+.lb-period {
+  font: 600 0.9rem var(--font); color: var(--text-dim); background: transparent; border: 0;
+  padding: 6px 16px; min-height: 34px; border-radius: 999px; cursor: pointer; transition: color 0.15s, background 0.2s;
+}
+.lb-period:hover:not(:disabled) { color: var(--text); }
+.lb-period.is-active { background: var(--surface-2); color: var(--text); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+.lb-period:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.lb-board { display: flex; flex-direction: column; gap: 12px; transition: opacity 0.2s; }
+.lb-board.is-refreshing { opacity: 0.55; }
+.lb-error { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+/* Podium */
+.lb-podium {
+  list-style: none; margin: 8px 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: end;
+}
+.lb-pod {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; text-align: center;
+  animation: lb-rise 0.5s cubic-bezier(.2, 1.3, .4, 1) both;
+}
+.lb-pod-1 { animation-delay: 0.12s; }
+.lb-pod-3 { animation-delay: 0.06s; }
+@keyframes lb-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+.lb-pod-medal { font-size: 1.4rem; }
+.lb-pod-avatar {
+  width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 1.8rem;
+  background: var(--surface); border: 2px solid var(--border);
+}
+.lb-pod-1 .lb-pod-avatar { width: 68px; height: 68px; font-size: 2.2rem; border-color: var(--gold); box-shadow: 0 0 24px rgba(255, 209, 102, 0.35); }
+.lb-pod-2 .lb-pod-avatar { border-color: #c9d1ff; }
+.lb-pod-3 .lb-pod-avatar { border-color: #e0a26b; }
+.lb-pod-name { font-weight: 700; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; }
+.lb-pod-score { font-weight: 700; color: var(--primary-2); font-size: 0.9rem; }
+.lb-pod-step {
+  width: 100%; margin-top: 6px; display: grid; place-items: center;
+  font-size: 1.6rem; font-weight: 800; color: rgba(255, 255, 255, 0.35);
+  border-radius: 12px 12px 4px 4px; border: 1px solid var(--border); border-bottom: 0;
+  background: linear-gradient(180deg, var(--surface-2), var(--bg-2));
+}
+.lb-pod-1 .lb-pod-step { height: 92px; background: linear-gradient(180deg, rgba(255, 209, 102, 0.35), var(--bg-2)); border-color: rgba(255, 209, 102, 0.5); color: var(--gold); }
+.lb-pod-2 .lb-pod-step { height: 66px; }
+.lb-pod-3 .lb-pod-step { height: 48px; }
+.lb-pod.is-me .lb-pod-name { color: var(--primary-2); }
+
+/* List */
+.lb-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.lb-row {
+  display: grid; grid-template-columns: 48px 40px 1fr auto; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border);
+  animation: pop 0.25s ease both;
+}
+.lb-rank { font-weight: 800; color: var(--text-dim); text-align: center; font-size: 1rem; }
+.lb-avatar { font-size: 1.5rem; text-align: center; }
+.lb-name { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+.lb-score { font-weight: 700; white-space: nowrap; }
+.lb-you { background: var(--primary); border-color: var(--primary); color: #fff; font-size: 0.7rem; flex: none; }
+.lb-row.is-me {
+  background: linear-gradient(90deg, rgba(124, 92, 255, 0.28), rgba(124, 92, 255, 0.08));
+  border-color: var(--primary); box-shadow: 0 6px 20px rgba(124, 92, 255, 0.25);
+}
+.lb-pinned { position: sticky; bottom: 12px; z-index: 2; display: flex; flex-direction: column; gap: 6px; }
+.lb-gap { text-align: center; color: var(--text-dim); letter-spacing: 0.3em; }
+.lb-row.is-pinned { backdrop-filter: blur(10px); background: rgba(38, 30, 90, 0.92); }
+.lb-notyet { margin: 4px 0 0; }
+
+.lb-skel {
+  height: 58px; border-radius: 14px;
+  background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%);
+  background-size: 200% 100%; animation: lb-shimmer 1.3s linear infinite;
+}
+@keyframes lb-shimmer { to { background-position: -200% 0; } }
+
+.lb-empty { padding: 36px 20px; }
+.lb-empty-icon { font-size: 3rem; margin-bottom: 8px; animation: pop 0.4s ease both; }
+
+@media (max-width: 760px) {
+  .lb-pinned { bottom: calc(76px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 480px) {
+  .lb-row { grid-template-columns: 40px 32px 1fr auto; gap: 8px; padding: 8px 10px; }
+  .lb-avatar { font-size: 1.3rem; }
+  .lb-periods { align-self: stretch; }
+  .lb-pod-avatar { width: 48px; height: 48px; font-size: 1.5rem; }
+  .lb-pod-1 .lb-pod-avatar { width: 58px; height: 58px; font-size: 1.9rem; }
+  .lb-pod-score .small { display: none; }
+}

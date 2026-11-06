@@ -26,8 +26,23 @@ app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 // Serve the built React app (single Render service hosts API + WebSocket + frontend).
 const dist = fileURLToPath(new URL('../../client/dist', import.meta.url));
 if (existsSync(dist)) {
-  app.use(express.static(dist, { maxAge: '1h', index: false }));
-  app.get(/^(?!\/api|\/ws).*/, (_req, res) => res.sendFile('index.html', { root: dist }));
+  app.use(
+    express.static(dist, {
+      index: false,
+      setHeaders(res, file) {
+        // Hashed build assets never change; the shell, worker and manifest must revalidate.
+        if (/[\\/]assets[\\/]/.test(file)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        else res.setHeader('Cache-Control', 'no-cache');
+      },
+    })
+  );
+  // A missing asset or file must 404, not fall through to index.html (that would be
+  // served as JS/CSS with a text/html type and could be cached by the service worker).
+  app.get(/^\/assets\/|\.[a-z0-9]+$/i, (_req, res) => res.status(404).type('text').send('Not found'));
+  app.get(/^(?!\/api|\/ws).*/, (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile('index.html', { root: dist });
+  });
 }
 
 // eslint-disable-next-line no-unused-vars

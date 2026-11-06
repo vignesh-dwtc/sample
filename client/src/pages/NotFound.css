@@ -1,0 +1,21 @@
+/* 404. Prefix: .nf- */
+.nf-page { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 56px; }
+.nf-art { display: flex; align-items: center; gap: 6px; margin-bottom: 16px; }
+.nf-digit {
+  font-size: clamp(5rem, 22vw, 8rem); font-weight: 800; line-height: 1;
+  background: linear-gradient(135deg, var(--primary-2), var(--accent));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.nf-egg { font-size: clamp(4rem, 18vw, 6.5rem); display: inline-block; transform-origin: 50% 90%; animation: nf-wobble 2.4s ease-in-out infinite; }
+@keyframes nf-wobble {
+  0%, 60%, 100% { transform: rotate(0); }
+  70% { transform: rotate(-12deg); } 80% { transform: rotate(10deg); } 90% { transform: rotate(-5deg); }
+}
+.nf-path { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; overflow-wrap: anywhere; }
+.nf-actions { justify-content: center; margin: 8px 0 24px; }
+.nf-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.nf-links a {
+  padding: 6px 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); font-size: 0.9rem;
+}
+.nf-links a:hover { border-color: var(--primary); text-decoration: none; }

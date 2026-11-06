@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>PlayNest</title>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b6bff"/>
+      <stop offset="1" stop-color="#1fc9a0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#g)"/>
+  <path d="M218 104c-14-8-30 2-30 18v150c0 16 16 26 30 18l128-75c14-8 14-28 0-36z" fill="#fff"/>
+  <path d="M112 300c28 108 260 108 288 0" fill="none" stroke="#fff" stroke-width="30" stroke-linecap="round"/>
+  <path d="M162 344h188" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="380" cy="128" r="26" fill="#ffd166"/>
+</svg>

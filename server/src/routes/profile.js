@@ -61,5 +61,29 @@ leaderboardRouter.get('/', requireAuth, ah(async (req, res) => {
        GROUP BY u.id ORDER BY score DESC, u.username LIMIT 50`, [games, from]));
   }
   const ranked = rows.map((r, i) => ({ rank: i + 1, ...r, me: r.id === req.user.id }));
-  res.json({ game, period, rows: ranked, me: ranked.find((r) => r.me) || null });
+  let me = ranked.find((r) => r.me) || null;
+  // Additive (CORE): when I'm outside the top 50, compute my own rank so the UI can pin it.
+  if (!me && rows.length >= 50) {
+    let mine;
+    if (game === 'xp') {
+      ({ rows: [mine] } = await query(
+        `SELECT * FROM (SELECT id, username, avatar, xp AS score,
+           row_number() OVER (ORDER BY xp DESC, created_at)::int AS rank FROM users) r WHERE id=$1`,
+        [req.user.id]));
+    } else {
+      const from = period === 'today' ? date : period === 'week' ? addDays(date, -6) : '1970-01-01';
+      const games = game === 'party' ? ['party_trivia', 'party_reaction'] : [game];
+      ({ rows: [mine] } = await query(
+        `WITH best AS (
+           SELECT user_id, play_date, max(score) AS s FROM game_results
+           WHERE game = ANY($1) AND play_date >= $2 GROUP BY user_id, play_date),
+         totals AS (
+           SELECT u.id, u.username, u.avatar, sum(b.s)::int AS score
+           FROM best b JOIN users u ON u.id=b.user_id GROUP BY u.id)
+         SELECT * FROM (SELECT *, row_number() OVER (ORDER BY score DESC, username)::int AS rank FROM totals) r
+         WHERE id=$3`, [games, from, req.user.id]));
+    }
+    if (mine) me = { ...mine, me: true };
+  }
+  res.json({ game, period, rows: ranked, me });
 }));

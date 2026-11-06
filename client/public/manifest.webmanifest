@@ -1,0 +1,24 @@
+{
+  "name": "PlayNest — Daily Puzzles & Party Games",
+  "short_name": "PlayNest",
+  "description": "Daily puzzles, real-time party games and AI mysteries. Play instantly, no signup.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f1020",
+  "theme_color": "#0f1020",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Lexicon", "url": "/play/lexicon", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Party", "url": "/party", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Leaderboard", "url": "/leaderboard", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
