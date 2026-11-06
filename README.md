@@ -76,7 +76,7 @@ npm test
 
 ## Deploy to Render + Neon
 
-1. **Neon:** create a project and copy the connection string. It ends with `?sslmode=require`.
+1. **Neon:** create a project (or a new database named `playnest` in an existing project) and copy its connection string. It ends with `?sslmode=require`. **PlayNest needs its own database** — if it shares one with another app that already has a `users` table, the server refuses to start and says so in the logs.
 2. **Render:**
    1. Go to **New → Blueprint**, pick this repo, and Render reads `render.yaml`.
    2. When prompted, set `DATABASE_URL` to your Neon connection string. `JWT_SECRET` is generated for you.
