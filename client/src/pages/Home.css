@@ -199,3 +199,26 @@
   .hm-nudge { flex-wrap: wrap; }
   .hm-nudge .btn { margin-left: auto; }
 }
+
+/* ---------- Travel card ---------- */
+.hm-travel {
+  display: flex; align-items: center; gap: 16px; color: var(--text);
+  border-color: rgba(34, 211, 166, 0.5);
+  background: radial-gradient(420px 200px at 0% 0%, rgba(34, 211, 166, 0.22), transparent 70%),
+              radial-gradient(380px 200px at 100% 100%, rgba(124, 92, 255, 0.22), transparent 70%),
+              linear-gradient(180deg, var(--surface), var(--bg-2));
+}
+.hm-travel:hover { text-decoration: none; border-color: var(--accent); }
+.hm-travel-art {
+  flex: none; width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; font-size: 2.2rem;
+  background: rgba(34, 211, 166, 0.14); border: 1px solid rgba(34, 211, 166, 0.4);
+}
+.hm-travel-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.hm-travel-text h2 { margin: 0; font-size: 1.25rem; overflow-wrap: anywhere; }
+.hm-travel-text p { margin: 0; }
+.hm-travel-go { flex: none; font-weight: 700; color: var(--accent); white-space: nowrap; }
+@media (max-width: 520px) {
+  .hm-travel { flex-wrap: wrap; gap: 12px; padding: 16px; }
+  .hm-travel-art { width: 52px; height: 52px; font-size: 1.8rem; }
+  .hm-travel-go { width: 100%; text-align: center; padding: 10px; border-radius: 999px; background: rgba(34, 211, 166, 0.14); border: 1px solid rgba(34, 211, 166, 0.4); }
+}

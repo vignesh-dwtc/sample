@@ -49,3 +49,11 @@ export const IconClose = (p) => (
     <path d="M6 6l12 12M18 6 6 18" />
   </svg>
 );
+
+export const IconTravel = (p) => (
+  <svg {...base} {...p}>
+    <rect x="5" y="7" width="14" height="13" rx="2.5" />
+    <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+    <path d="M9 11v5M15 11v5" />
+  </svg>
+);

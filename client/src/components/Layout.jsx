@@ -39,6 +39,7 @@ function Footer() {
         <nav className="pn-footer-links" aria-label="Footer">
           <Link to="/">Play</Link>
           <Link to="/party">Party</Link>
+          <Link to="/travel">Travel</Link>
           <Link to="/detective">Detective</Link>
           <Link to="/leaderboard">Leaderboard</Link>
           <Link to="/profile">Profile</Link>

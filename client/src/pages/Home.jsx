@@ -7,6 +7,7 @@ import {
   DAILIES, achievementTeaser, dailiesDone, formatHms, formatNumber, greeting, levelPercent,
   medal, nextAction, normalizeRoomCode, streakStatus,
 } from '../components/coreLogic.js';
+import { MODES, useTripState } from '../travel/trip.js';
 import './Home.css';
 
 const STATUS_LABEL = { new: 'New', in_progress: 'In progress', done: 'Done' };
@@ -103,6 +104,27 @@ function Hero({ profile, countdown }) {
         <span aria-hidden="true" className="hm-cta-arrow">→</span>
       </Link>
     </section>
+  );
+}
+
+function TravelCard() {
+  const trip = useTripState();
+  const mode = trip ? MODES[trip.mode] || MODES.road : null;
+  const km = trip?.distanceKm || 0;
+  return (
+    <Link to="/travel" className="card interactive hm-travel pop" aria-labelledby="hm-travel-h">
+      <div className="hm-travel-art" aria-hidden="true">{trip ? mode.icon : '🧳'}</div>
+      <div className="hm-travel-text">
+        <span className={`badge ${trip ? 'live' : 'done'}`}>{trip ? '● Trip in progress' : 'New · works offline'}</span>
+        <h2 id="hm-travel-h">{trip ? (trip.destination ? `On the way to ${trip.destination.name}` : 'Your journey') : 'Travel'}</h2>
+        <p className="muted small">
+          {trip
+            ? `${km < 10 ? km.toFixed(1) : Math.round(km)} km travelled · live speed, ETA, sky events and games.`
+            : 'Live speed, ETA and sunset countdowns, plus five games built around where you are right now.'}
+        </p>
+      </div>
+      <span className="hm-travel-go">{trip ? 'Open' : 'Start'} <span aria-hidden="true">→</span></span>
+    </Link>
   );
 }
 
@@ -297,6 +319,7 @@ export default function Home() {
   return (
     <div className="container hm-page">
       <Hero profile={profile} countdown={countdown} />
+      <TravelCard />
       <Dailies daily={profile.daily} countdown={countdown} />
       {isGuest && (
         <div className="hm-nudge" role="note">

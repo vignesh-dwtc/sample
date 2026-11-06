@@ -9,7 +9,7 @@ import './Leaderboard.css';
 
 const PLAY_LINK = {
   lexicon: '/play/lexicon', target: '/play/target', flip: '/play/flip', reflex: '/play/reflex',
-  party: '/party', detective: '/detective', xp: '/',
+  party: '/party', detective: '/detective', travel: '/travel', xp: '/',
 };
 
 function Row({ r, unit, pinned }) {
@@ -64,6 +64,16 @@ export default function Leaderboard() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Keep the selected game tab visible in the horizontally scrolling strip (e.g. deep links to ?game=travel).
+  const tabsRef = useRef(null);
+  useEffect(() => {
+    const strip = tabsRef.current;
+    const tab = strip?.querySelector('.lb-tab.is-active');
+    if (!strip || !tab) return;
+    const left = strip.scrollLeft + tab.getBoundingClientRect().left - strip.getBoundingClientRect().left - (strip.clientWidth - tab.offsetWidth) / 2;
+    strip.scrollTo?.({ left: Math.max(0, left), behavior: 'smooth' });
+  }, [game]);
+
   const set = (patch) => {
     const next = new URLSearchParams(params);
     for (const [k, v] of Object.entries(patch)) next.set(k, v);
@@ -104,7 +114,7 @@ export default function Leaderboard() {
         </div>
       </header>
 
-      <div className="lb-tabs" role="tablist" aria-label="Game">
+      <div className="lb-tabs" role="tablist" aria-label="Game" ref={tabsRef}>
         {BOARD_GAMES.map((g) => (
           <button
             key={g.id} type="button" role="tab" aria-selected={g.id === game} aria-controls="lb-board" tabIndex={g.id === game ? 0 : -1}

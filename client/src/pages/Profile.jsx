@@ -316,7 +316,8 @@ export default function Profile() {
             <span role="columnheader">Win %</span>
             <span role="columnheader">Best</span>
           </div>
-          {Object.entries(GAME_INFO).map(([g, info]) => {
+          {/* Travel games appear once played, so the table stays short for everyone else. */}
+          {Object.entries(GAME_INFO).filter(([g]) => !g.startsWith('travel_') || byGame[g]).map(([g, info]) => {
             const s = byGame[g];
             return (
               <div key={g} className={`pf-tr${s ? '' : ' is-empty'}`} role="row">

@@ -17,6 +17,7 @@ export const BOARD_GAMES = [
   { id: 'reflex', name: 'Reflex', icon: '⚡', unit: 'pts' },
   { id: 'party', name: 'Party', icon: '🎉', unit: 'pts' },
   { id: 'detective', name: 'Detective', icon: '🕵️', unit: 'pts' },
+  { id: 'travel', name: 'Travel', icon: '🧳', unit: 'pts' },
 ];
 
 export const PERIODS = [
@@ -34,6 +35,11 @@ export const GAME_INFO = {
   party_trivia: { name: 'Trivia Blitz', icon: '🧠', to: '/party' },
   party_reaction: { name: 'Reaction Duel', icon: '🚦', to: '/party' },
   detective: { name: 'Detective', icon: '🕵️', to: '/detective' },
+  travel_sky: { name: 'Sky Compass', icon: '🧭', to: '/travel/sky' },
+  travel_bingo: { name: 'Window Bingo', icon: '🎯', to: '/travel/bingo' },
+  travel_predict: { name: 'Distance Predictor', icon: '⏱️', to: '/travel/predict' },
+  travel_quiz: { name: 'Guess Where?', icon: '❓', to: '/travel/quiz' },
+  travel_trip: { name: 'Trip milestones', icon: '🛣️', to: '/travel' },
 };
 
 export const isValidBoardGame = (g) => BOARD_GAMES.some((b) => b.id === g);
@@ -168,6 +174,12 @@ export function titleFor(pathname) {
     [/^\/play\/reflex/, 'Reflex'],
     [/^\/party/, 'Party'],
     [/^\/detective/, 'Detective'],
+    [/^\/travel\/sky/, 'Sky Compass'],
+    [/^\/travel\/map/, 'Live Map'],
+    [/^\/travel\/quiz/, 'Guess Where?'],
+    [/^\/travel\/bingo/, 'Window Bingo'],
+    [/^\/travel\/predict/, 'Distance Predictor'],
+    [/^\/travel/, 'Travel'],
     [/^\/leaderboard/, 'Leaderboard'],
     [/^\/profile/, 'Profile'],
   ];

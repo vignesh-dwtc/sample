@@ -1,12 +1,14 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useSession } from '../lib/session.jsx';
 import Logo from './Logo.jsx';
-import { IconPlay, IconParty, IconDetective, IconTrophy, IconUser } from './Icons.jsx';
+import { IconPlay, IconParty, IconDetective, IconTrophy, IconUser, IconTravel } from './Icons.jsx';
 
 const LINKS = [
   { to: '/', label: 'Play', Icon: IconPlay, match: (p) => p === '/' || p.startsWith('/play') },
   { to: '/party', label: 'Party', Icon: IconParty, match: (p) => p.startsWith('/party') },
-  { to: '/detective', label: 'Detective', Icon: IconDetective, match: (p) => p.startsWith('/detective') },
+  { to: '/travel', label: 'Travel', Icon: IconTravel, match: (p) => p.startsWith('/travel') },
+  // Detective stays in the desktop nav, Home and the footer; the phone tab bar keeps 5 tabs.
+  { to: '/detective', label: 'Detective', Icon: IconDetective, match: (p) => p.startsWith('/detective'), tab: false },
   { to: '/leaderboard', label: 'Leaderboard', short: 'Ranks', Icon: IconTrophy, match: (p) => p.startsWith('/leaderboard') },
 ];
 
@@ -70,7 +72,7 @@ export function TabBar() {
   const meActive = pathname.startsWith('/profile');
   return (
     <nav className="pn-tabbar" aria-label="Tabs">
-      {LINKS.map((l) => (
+      {LINKS.filter((l) => l.tab !== false).map((l) => (
         <NavLink
           key={l.to} to={l.to}
           className={() => `pn-tab${isActive(l) ? ' is-active' : ''}`}
