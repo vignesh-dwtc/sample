@@ -51,7 +51,8 @@ leaderboardRouter.get('/', requireAuth, ah(async (req, res) => {
       `SELECT id, username, avatar, xp AS score FROM users WHERE xp > 0 ORDER BY xp DESC, created_at LIMIT 50`));
   } else {
     const from = period === 'today' ? date : period === 'week' ? addDays(date, -6) : '1970-01-01';
-    const games = game === 'party' ? ['party_trivia', 'party_reaction'] : [game];
+    const games = game === 'party' ? ['party_trivia', 'party_reaction']
+      : game === 'travel' ? ['travel_sky', 'travel_bingo', 'travel_predict', 'travel_quiz', 'travel_trip'] : [game];
     // Per day keep each user's best score, then sum across the period.
     ({ rows } = await query(
       `WITH best AS (
@@ -73,7 +74,8 @@ leaderboardRouter.get('/', requireAuth, ah(async (req, res) => {
         [req.user.id]));
     } else {
       const from = period === 'today' ? date : period === 'week' ? addDays(date, -6) : '1970-01-01';
-      const games = game === 'party' ? ['party_trivia', 'party_reaction'] : [game];
+      const games = game === 'party' ? ['party_trivia', 'party_reaction']
+      : game === 'travel' ? ['travel_sky', 'travel_bingo', 'travel_predict', 'travel_quiz', 'travel_trip'] : [game];
       ({ rows: [mine] } = await query(
         `WITH best AS (
            SELECT user_id, play_date, max(score) AS s FROM game_results

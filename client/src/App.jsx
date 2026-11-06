@@ -10,6 +10,12 @@ const Flip = lazy(() => import('./pages/Flip.jsx'));
 const Reflex = lazy(() => import('./pages/Reflex.jsx'));
 const Party = lazy(() => import('./pages/Party.jsx'));
 const Detective = lazy(() => import('./pages/Detective.jsx'));
+const Travel = lazy(() => import('./pages/Travel.jsx'));
+const TravelSky = lazy(() => import('./pages/TravelSky.jsx'));
+const TravelMap = lazy(() => import('./pages/TravelMap.jsx'));
+const TravelQuiz = lazy(() => import('./pages/TravelQuiz.jsx'));
+const TravelBingo = lazy(() => import('./pages/TravelBingo.jsx'));
+const TravelPredict = lazy(() => import('./pages/TravelPredict.jsx'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard.jsx'));
 const Profile = lazy(() => import('./pages/Profile.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
@@ -27,6 +33,12 @@ export default function App() {
           <Route path="/party" element={<Party />} />
           <Route path="/party/:code" element={<Party />} />
           <Route path="/detective" element={<Detective />} />
+          <Route path="/travel" element={<Travel />} />
+          <Route path="/travel/sky" element={<TravelSky />} />
+          <Route path="/travel/map" element={<TravelMap />} />
+          <Route path="/travel/quiz" element={<TravelQuiz />} />
+          <Route path="/travel/bingo" element={<TravelBingo />} />
+          <Route path="/travel/predict" element={<TravelPredict />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />

@@ -106,3 +106,44 @@ Client page `Detective.jsx`: case file intro (title, setting, victim, clues), su
 - Playwright + Chromium are preinstalled (`require('playwright')`; `chromium.launch()`). Use them to check your pages at 390px and 1280px widths.
 - Several teams work at the same time. **Use only your team's ports**: DAILY api 3101 / vite 5101, PARTY 3201 / 5201, DETECTIVE 3301 / 5301, CORE 3401 / 5401. Run the server with `PORT=<api> node --env-file=.env src/index.js`. Run the client with `API_PORT=<api> VITE_PORT=<vite> npx vite --strictPort`. **Do not run `vite build` into `client/dist`** (it is shared). For a build check, use `npx vite build --outDir /tmp/<team>-dist --emptyOutDir`. Kill your processes when done.
 - Other teams are editing other files at the same time. Only edit the files your team owns. If you need a change in a foundation file, make it minimal and additive, and mention it in your report.
+
+
+## Travel section (added later): live-data travel games
+
+The owner is going on a 10–12 hour trip (mode unknown: road, train or flight; India-based). These pages entertain him on his **phone** with real live data. The network will be patchy, so the design is **offline-first**:
+- GPS, the compass and sun/moon maths work with no internet.
+- Maps, Wikipedia, weather and place names need the network. They must degrade gracefully with a friendly message.
+- **Privacy:** location never goes to our server. Only scores go through `POST /api/travel/submit`.
+
+**Already built (foundation, do not rewrite; small additive edits OK):**
+- `client/src/travel/geo.js`: `distanceKm`, `bearing`, `compassPoint`, `compassName`, `angleDiff`, `formatKm`, `formatDuration`, `formatTime`.
+- `client/src/travel/sky.js` (suncalc, on-device):
+  - `sunInfo(date, lat, lon)`: azimuth in degrees from north, altitude, sunrise/sunset/dawn/dusk/golden hours.
+  - `moonInfo(...)`: azimuth, altitude, illumination, phase, phaseName, emoji, rise/set.
+  - `upcomingSkyEvents(now, lat, lon)`.
+- `client/src/travel/useGeolocation.js`, `useHeading.js` (compass; iOS needs `request()` from a tap).
+- `client/src/travel/trip.js`:
+  - Trip state shared across pages and stored on the device: `useTripState`, `startTrip({mode, destination})`, `endTrip`, `setDestination`, `setMode`.
+  - Also: `MODES` (road/train/flight), `MILESTONES_KM`, and `submitTravelScore(game, score, data)` → `{progress}`.
+- `client/src/travel/TravelShell.jsx`:
+  - **Wrap every travel page** in `<TravelShell title icon>`. It runs the single GPS watch, records the trip, awards km milestones and shows a GPS/offline status.
+  - Read live data with `useTravel()` → `{position:{lat, lon, accuracy, speed m/s, heading, altitude, at}, geoStatus, startGps, trip, online}`.
+  - Use `<NeedsLocation why="…"/>` when GPS is required but off.
+  - Do not call `useGeolocation` again in pages.
+- Server `POST /api/travel/submit {game, score 0–100 integer, data}`:
+  - Games: `travel_sky` (data.target 'sun'|'moon'), `travel_bingo` (data.lines, data.full), `travel_predict`, `travel_quiz`, `travel_trip` (milestones; automatic).
+  - The same game can be submitted at most once per 15 s (otherwise 429).
+  - Achievements: sun_finder, moon_finder, bingo_line, bingo_full, predictor_ace, geo_guru, road_warrior, globetrotter.
+  - Leaderboard `game=travel`.
+- Routes, with placeholder pages to replace: `/travel` (Travel.jsx hub), `/travel/sky`, `/travel/map`, `/travel/quiz`, `/travel/bingo`, `/travel/predict`.
+- Dependencies installed: `suncalc`, `leaflet` (`import L from 'leaflet'; import 'leaflet/dist/leaflet.css'`).
+
+**Free public APIs** (no keys; call them from the browser; cache results; respect the limits):
+- **OpenStreetMap tiles:** `https://tile.openstreetmap.org/{z}/{x}/{y}.png`. Visible "© OpenStreetMap contributors" attribution is required.
+- **Nominatim:** `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=..&lon=..&zoom=10` and `/search?format=jsonv2&q=..&limit=5`.
+  - At most 1 request per second. Reverse geocoding at most every 2 minutes or 2 km.
+  - Debounce search to 600 ms or more.
+- **Open-Meteo:** `https://api.open-meteo.com/v1/forecast?latitude=..&longitude=..&current=temperature_2m,weather_code,wind_speed_10m,is_day&timezone=auto`. Its response `timezone` gives the IANA zone.
+- **Wikipedia nearby:** `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=LAT|LON&gsradius=10000&gslimit=50&format=json&origin=*`.
+
+**Testing:** Playwright can fake GPS with `browser.newContext({ geolocation: { latitude, longitude }, permissions: ['geolocation'] })` and `context.setGeolocation(...)` to simulate movement. Test with Indian coordinates, e.g. Bengaluru 12.97, 77.59 moving towards Chennai 13.08, 80.27. Set `localStorage['playnest.geo.ok']='1'` (or tap the location button) to start GPS. The cloud test machine can't reach the outside internet from the browser unless the proxy is configured, so external APIs may fail there. Make sure the UI handles that gracefully, and stub `page.route()` responses to test the success paths.

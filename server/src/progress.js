@@ -27,6 +27,14 @@ export const ACHIEVEMENTS = {
   level_5:         { title: 'Rising Star',      desc: 'Reach level 5',                        icon: '⭐' },
   level_10:        { title: 'Veteran',          desc: 'Reach level 10',                       icon: '🌟' },
   registered:      { title: 'Here to Stay',     desc: 'Claim your account',                   icon: '🔐' },
+  sun_finder:      { title: 'Sun Seeker',       desc: 'Point straight at the sun in Sky Compass', icon: '🌞' },
+  moon_finder:     { title: 'Moon Gazer',       desc: 'Point straight at the moon in Sky Compass', icon: '🌝' },
+  bingo_line:      { title: 'Window Watcher',   desc: 'Complete a line in Window Bingo',      icon: '🪟' },
+  bingo_full:      { title: 'Eagle Eyes',       desc: 'Fill a whole Window Bingo card',       icon: '🦅' },
+  predictor_ace:   { title: 'Human GPS',        desc: 'Score 90+ in Distance Predictor',      icon: '🧭' },
+  geo_guru:        { title: 'Local Expert',     desc: 'Score 80+ in Guess Where?',            icon: '🗺️' },
+  road_warrior:    { title: 'Road Warrior',     desc: 'Travel 100 km on one trip',            icon: '🛣️' },
+  globetrotter:    { title: 'Globetrotter',     desc: 'Travel 500 km on one trip',            icon: '🌍' },
 };
 
 /**
