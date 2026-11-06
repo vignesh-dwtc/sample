@@ -134,3 +134,8 @@
   .lx-line-slot { animation: none; }
   .lx-board { transition: none; }
 }
+
+/* Guess sent to the server, waiting for its result (gentle pulse so it's clearly "checking"). */
+.lx-row.lx-pending .lx-tile { animation: lx-pending-pulse 0.9s ease-in-out infinite alternate; }
+@keyframes lx-pending-pulse { from { opacity: 1; } to { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .lx-row.lx-pending .lx-tile { animation: none; opacity: 0.7; } }

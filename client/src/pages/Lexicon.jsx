@@ -75,6 +75,8 @@ export default function Lexicon() {
   const [flash, setFlash] = useState(null);
   const [shakeRow, setShakeRow] = useState(false);
   const [revealing, setRevealing] = useState(-1); // row index currently flipping
+  const [pending, setPending] = useState(null); // word sent to the server, awaiting its result
+  const [queuedEnter, setQueuedEnter] = useState(false); // Enter pressed while a guess was in flight/flipping
   const [showResult, setShowResult] = useState(false);
   const [progress, setProgress] = useState(null);
   const flashTimer = useRef();
@@ -156,13 +158,19 @@ export default function Lexicon() {
     if (busy || finished || revealing >= 0) return;
     if (input.length < 5) return bad('Not enough letters');
     if (guesses.some((g) => g.word === input)) return bad('Already guessed');
+    const word = input;
+    // Move the word into a "pending" row right away so the player can keep typing the next one
+    // while the server checks it (slow mobile data) and while the tiles flip.
+    setPending(word);
+    setInput('');
     setBusy(true);
     try {
-      const next = await api('/daily/lexicon/guess', { method: 'POST', body: { word: input } });
+      const next = await api('/daily/lexicon/guess', { method: 'POST', body: { word } });
       const row = next.guesses.length - 1;
       setRevealing(row);
       setData(next);
-      setInput('');
+      setPending(null);
+      if (next.finished) { setInput(''); setQueuedEnter(false); }
       setTimeout(() => {
         setRevealing(-1);
         if (next.finished) {
@@ -175,6 +183,9 @@ export default function Lexicon() {
         }
       }, REVEAL_MS);
     } catch (e) {
+      setPending(null);
+      setQueuedEnter(false);
+      setInput(word); // give the rejected word back so it can be fixed
       if (e.status === 409) reload();
       bad(e.message || 'Something went wrong');
     } finally {
@@ -183,11 +194,19 @@ export default function Lexicon() {
   }, [busy, finished, revealing, input, guesses, bad, setData, say, celebrate, reload]);
 
   const press = useCallback((key) => {
-    if (finished || busy || revealing >= 0) return;
-    if (key === 'enter') return submit();
-    if (key === 'back') return setInput((s) => s.slice(0, -1));
+    if (finished) return;
+    // Typing is never blocked; only submitting waits for the previous guess to finish.
+    if (key === 'enter') return busy || revealing >= 0 ? setQueuedEnter(true) : submit();
+    if (key === 'back') { setQueuedEnter(false); return setInput((s) => s.slice(0, -1)); }
     if (/^[a-z]$/.test(key)) setInput((s) => (s.length < 5 ? s + key : s));
   }, [finished, busy, revealing, submit]);
+
+  // Submit an Enter that was pressed while the previous guess was still being checked/flipped.
+  useEffect(() => {
+    if (!queuedEnter || busy || revealing >= 0 || finished) return;
+    setQueuedEnter(false);
+    if (input.length === 5) submit();
+  }, [queuedEnter, busy, revealing, finished, input, submit]);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -209,14 +228,16 @@ export default function Lexicon() {
   const rows = [];
   for (let r = 0; r < maxGuesses; r++) {
     const g = guesses[r];
-    const isCurrent = !g && r === guesses.length && !finished;
-    const letters = g ? g.word : isCurrent ? input : '';
+    const pendingRow = pending ? guesses.length : -1;
+    const isPending = !g && r === pendingRow;
+    const isCurrent = !g && !finished && r === (pendingRow >= 0 ? pendingRow + 1 : guesses.length);
+    const letters = g ? g.word : isPending ? pending : isCurrent ? input : '';
     const winRow = g && data.won && r === guesses.length - 1 && revealing < 0;
     const line = lineFor(r);
     rows.push(
       <div key={r} className="lx-line">
       <div
-        className={`lx-row${isCurrent && shakeRow ? ' lx-shake' : ''}${winRow ? ' lx-win' : ''}`}
+        className={`lx-row${isCurrent && shakeRow ? ' lx-shake' : ''}${winRow ? ' lx-win' : ''}${isPending ? ' lx-pending' : ''}`}
         onAnimationEnd={(e) => { if (e.animationName === 'lx-shake') setShakeRow(false); }}
         role="group"
         aria-label={g ? `${g.word}: ${g.marks.join(', ')}` : isCurrent ? `Current guess ${input || 'empty'}` : 'Empty row'}
@@ -310,7 +331,7 @@ export default function Lexicon() {
                       data-lx-key={k}
                       className={`lx-key${k.length > 1 ? ' wide' : ''}${keyMarks[k] ? ` ${keyMarks[k]}` : ''}`}
                       onClick={(e) => { press(k); e.currentTarget.blur(); }}
-                      disabled={busy && k === 'enter'}
+                      disabled={false}
                       aria-label={k === 'back' ? 'Backspace' : k === 'enter' ? 'Enter' : `${k}${keyMarks[k] ? ` (${keyMarks[k]})` : ''}`}
                     >
                       {k === 'back' ? '⌫' : k === 'enter' ? 'Enter' : k}

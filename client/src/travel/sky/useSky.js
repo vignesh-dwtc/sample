@@ -9,7 +9,8 @@ const LAST_KEY = 'playnest.sky.lastpos';
 export function useNow(every = 1000) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), every);
+    // No re-render while the screen is off / tab hidden (battery); catch up when visible again.
+    const id = setInterval(() => { if (!document.hidden) setNow(new Date()); }, every);
     const vis = () => { if (!document.hidden) setNow(new Date()); };
     document.addEventListener('visibilitychange', vis);
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', vis); };
@@ -83,6 +84,6 @@ export function useSkyData(pos, now) {
     return { sun: sunInfo(t, lat, lon), moon: moonInfo(t, lat, lon) };
   }, [sec, lat, lon]);
 
-  if (!slow || !live) return null;
-  return { ...slow, sun: live.sun, moon: live.moon };
+  // Stable object between clock ticks, so compass events (up to 60/s) don't re-render the memoised cards.
+  return useMemo(() => (slow && live ? { ...slow, sun: live.sun, moon: live.moon } : null), [slow, live]);
 }

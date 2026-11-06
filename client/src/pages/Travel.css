@@ -146,7 +146,7 @@
 .tvh-ev-icon { font-size: 1.4rem; flex: none; width: 30px; text-align: center; }
 .tvh-ev-main { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.3; }
 .tvh-ev-title { font-weight: 600; overflow-wrap: anywhere; }
-.tvh-ev-link { font-weight: 600; display: inline-block; padding: 4px 0; }
+.tvh-ev-link { font-weight: 600; display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; margin: -9px -4px; vertical-align: middle; }
 .tvh-ev-count { flex: none; font-weight: 700; font-size: 0.9rem; color: var(--accent); text-align: right; font-variant-numeric: tabular-nums; }
 .tvh-ev.is-now .tvh-ev-count { color: var(--gold); }
 .tvh-log summary { cursor: pointer; color: var(--text-dim); font-weight: 600; min-height: 44px; display: flex; align-items: center; }
@@ -181,7 +181,7 @@
 
 .tvh-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .tvh-ready { margin: 0; padding: 6px 12px; }
-.tvh-end { min-height: 44px; }
+.btn.tvh-end, .tvh-confirm .btn { min-height: 44px; }
 .tvh-confirm { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: var(--radius-sm);
   border: 1px solid var(--danger); background: rgba(255, 92, 122, 0.08); }
 .tvh-confirm .btn { min-height: 44px; }
@@ -213,3 +213,6 @@
 @media (prefers-reduced-motion: reduce) {
   .tvh-hero-art span, .tvh-speed-road > span.is-moving, .tvh-live-dot, .tvh-ev.is-now { animation: none; }
 }
+
+.tvh-credits { text-align: center; margin: 0; }
+.tvh-credits a { color: inherit; text-decoration: underline; display: inline-flex; align-items: center; min-height: 44px; }

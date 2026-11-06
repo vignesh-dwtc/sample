@@ -31,8 +31,12 @@ export default function DestinationSearch({ online, onPick, autoFocus }) {
   useEffect(() => () => ctl.current?.abort(), []);
 
   const locals = localMatches(q, 5);
-  const merged = [...remote.hits];
-  for (const l of locals) if (merged.length < 5 && !merged.some((h) => h.name.toLowerCase() === l.name.toLowerCase())) merged.push(l);
+  // Popular places whose name starts with the query go first: a short query like "Chen" otherwise puts
+  // obscure global Nominatim hits above Chennai and the trip silently gets the wrong destination.
+  const sl = q.trim().toLowerCase();
+  const merged = locals.filter((l) => l.name.toLowerCase().startsWith(sl)).slice(0, 3);
+  for (const h of remote.hits) if (merged.length < 6 && !merged.some((m) => m.name.toLowerCase() === h.name.toLowerCase())) merged.push(h);
+  for (const l of locals) if (merged.length < 6 && !merged.some((h) => h.name.toLowerCase() === l.name.toLowerCase())) merged.push(l);
   const s = q.trim();
 
   return (

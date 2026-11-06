@@ -84,8 +84,8 @@
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
 }
 .pn-footer-brand { display: flex; align-items: center; gap: 8px; font-weight: 700; flex-wrap: wrap; }
-.pn-footer-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; font-size: 0.9rem; }
-.pn-footer-links a { color: var(--text-dim); }
+.pn-footer-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 16px; font-size: 0.9rem; }
+.pn-footer-links a { color: var(--text-dim); display: inline-flex; align-items: center; min-height: 44px; }
 .pn-footer-links a:hover { color: var(--text); }
 
 /* ---------- Mobile tab bar ---------- */

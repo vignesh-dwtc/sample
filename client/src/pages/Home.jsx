@@ -110,7 +110,7 @@ function Hero({ profile, countdown }) {
 function TravelCard() {
   const trip = useTripState();
   const mode = trip ? MODES[trip.mode] || MODES.road : null;
-  const km = trip?.distanceKm || 0;
+  const km = Number(trip?.distanceKm) || 0;
   return (
     <Link to="/travel" className="card interactive hm-travel pop" aria-labelledby="hm-travel-h">
       <div className="hm-travel-art" aria-hidden="true">{trip ? mode.icon : '🧳'}</div>

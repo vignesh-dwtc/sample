@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { submitTravelScore } from '../trip.js';
 
 const QKEY = 'playnest.sky.pending';
-const TIMEOUT_MS = 8000;
+const TIMEOUT_MS = 15000; // generous: a request that times out but still lands would be re-sent from the queue (duplicate)
 
 const readQ = () => { try { const v = JSON.parse(localStorage.getItem(QKEY)); return Array.isArray(v) ? v : []; } catch { return []; } };
 const writeQ = (q) => { try { q.length ? localStorage.setItem(QKEY, JSON.stringify(q.slice(-5))) : localStorage.removeItem(QKEY); } catch { /* ignore */ } };

@@ -180,7 +180,7 @@ function Hub() {
   const [log, setLog] = useState([]);
   useEffect(() => {
     const c = readCache('log');
-    setLog(c && tripId && c.tripId === tripId ? c.items : []);
+    setLog(c && tripId && c.tripId === tripId && Array.isArray(c.items) ? c.items.filter((l) => l && l.key) : []);
   }, [tripId]);
   const addLog = useCallback((item) => {
     setLog((prev) => {
@@ -215,7 +215,8 @@ function Hub() {
   // Halfway / arriving-soon moments from live progress: a toast once per trip.
   useEffect(() => {
     if (!trip || !dest || progress == null) return;
-    const done = readCache('flags') || {};
+    const raw = readCache('flags');
+    const done = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
     const fire = (k, icon, title, body) => {
       const key = `${trip.id}-${k}`;
       if (done[key]) return;
@@ -243,6 +244,7 @@ function Hub() {
         <Onboarding geoStatus={geoStatus} startGps={startGps} online={online} hasFix={!!position} />
         <GameTiles online={online} />
         <OfflineBadge ready={ready} online={online} />
+        <Credits />
       </div>
     );
   }
@@ -275,7 +277,17 @@ function Hub() {
         <OfflineBadge ready={ready} online={online} />
         <EndTripButton />
       </div>
+      <Credits />
     </div>
+  );
+}
+
+function Credits() {
+  return (
+    <p className="small muted tvh-credits">
+        Place names © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>
+        {' · '}Weather by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>
+    </p>
   );
 }
 

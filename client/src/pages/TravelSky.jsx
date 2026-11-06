@@ -1,14 +1,19 @@
-import { useCallback, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { NeedsLocation, TravelShell, useTravel } from '../travel/TravelShell.jsx';
 import { useHeading } from '../travel/useHeading.js';
 import { useSession } from '../lib/session.jsx';
 import CompassDial from '../travel/sky/CompassDial.jsx';
-import { MoonCard, SunCard } from '../travel/sky/SkyCards.jsx';
-import SkyTimeline from '../travel/sky/SkyTimeline.jsx';
+import { MoonCard as MoonCardRaw, SunCard as SunCardRaw } from '../travel/sky/SkyCards.jsx';
+import SkyTimelineRaw from '../travel/sky/SkyTimeline.jsx';
 import SkyGame from '../travel/sky/SkyGame.jsx';
 import { useNow, useSkyData, useSkyPosition } from '../travel/sky/useSky.js';
 import { directionShort } from '../travel/sky/skyLogic.js';
 import './TravelSky.css';
+
+// The compass fires many times a second; only the dial needs that. These re-render once per clock tick.
+const SunCard = memo(SunCardRaw);
+const MoonCard = memo(MoonCardRaw);
+const SkyTimeline = memo(SkyTimelineRaw);
 
 export default function TravelSky() {
   return (

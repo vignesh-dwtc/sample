@@ -4,12 +4,21 @@ import { distanceKm } from '../geo.js';
 import { derivedKmh, gpsKmh, placeFromNominatim, shouldReverse } from './hubLogic.js';
 import { nominatim, openMeteo, readCache, writeCache } from './net.js';
 
+// Guards for on-device caches: a corrupted or old-format value must never crash the hub.
+const okNum = (n) => typeof n === 'number' && Number.isFinite(n);
+const validPlace = (p) => (p && typeof p === 'object' && okNum(p.lat) && okNum(p.lon) && okNum(p.at) && typeof p.name === 'string' ? p : null);
+const validWx = (w) => (w && typeof w === 'object' && okNum(w.lat) && okNum(w.lon) && okNum(w.at) && w.current && typeof w.current === 'object' ? w : null);
+
 /** Current time, re-rendering every `ms`. */
 export function useNow(ms = 1000) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), ms);
-    return () => clearInterval(id);
+    // Skip ticks while the screen is off / tab hidden (saves battery over a 12 h trip); catch up on return.
+    const hidden = () => typeof document !== 'undefined' && document.hidden;
+    const id = setInterval(() => { if (!hidden()) setNow(new Date()); }, ms);
+    const vis = () => { if (!hidden()) setNow(new Date()); };
+    document.addEventListener('visibilitychange', vis);
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', vis); };
   }, [ms]);
   return now;
 }
@@ -34,12 +43,12 @@ export function useSpeed(position) {
 export function useTopSpeed(trip, kmh) {
   const [top, setTop] = useState(() => {
     const c = readCache('top');
-    return c && trip && c.tripId === trip.id ? c.kmh : 0;
+    return c && trip && c.tripId === trip.id && Number.isFinite(c.kmh) ? c.kmh : 0;
   });
   useEffect(() => {
     if (!trip) return;
     const c = readCache('top');
-    const prev = c && c.tripId === trip.id ? c.kmh : 0;
+    const prev = c && c.tripId === trip.id && Number.isFinite(c.kmh) ? c.kmh : 0;
     const max = { road: 200, train: 400, flight: 1100 }[trip.mode] || 400;
     const next = kmh != null && kmh <= max && kmh > prev ? kmh : prev;
     if (next !== prev || !c || c.tripId !== trip.id) writeCache('top', { tripId: trip.id, kmh: next });
@@ -53,7 +62,7 @@ export function useTopSpeed(trip, kmh) {
  * Calls onRegion(newState, place) when the state/region changes.
  */
 export function usePlace(position, online, onRegion) {
-  const [place, setPlace] = useState(() => readCache('place'));
+  const [place, setPlace] = useState(() => validPlace(readCache('place')));
   const [status, setStatus] = useState('idle'); // idle | loading | error
   const busy = useRef(false);
   const failedAt = useRef(0);
@@ -63,8 +72,8 @@ export function usePlace(position, online, onRegion) {
   useEffect(() => {
     if (!position || !online || busy.current) return;
     const now = Date.now();
-    if (now - failedAt.current < 60000) return;
-    const last = readCache('place');
+    if (now - failedAt.current < 3 * 60000) return; // back off politely after a failure (e.g. Nominatim 429)
+    const last = validPlace(readCache('place'));
     if (!shouldReverse(last, position, now)) return;
     busy.current = true;
     setStatus('loading');
@@ -89,7 +98,7 @@ export function usePlace(position, online, onRegion) {
  * last result on-device for offline use. Returns { data, at, status, timezone }.
  */
 export function useWeather(cacheKey, point, online) {
-  const [state, setState] = useState(() => readCache(`wx.${cacheKey}`));
+  const [state, setState] = useState(() => validWx(readCache(`wx.${cacheKey}`)));
   const [status, setStatus] = useState('idle');
   const tick = useNow(60000);
   const busy = useRef(false);
@@ -100,7 +109,7 @@ export function useWeather(cacheKey, point, online) {
     if (lat == null || lon == null || !online || busy.current) return;
     const now = Date.now();
     if (now - failedAt.current < 90000) return;
-    const c = readCache(`wx.${cacheKey}`);
+    const c = validWx(readCache(`wx.${cacheKey}`));
     const age = c ? now - c.at : Infinity;
     const moved = c ? distanceKm(c, { lat, lon }) : Infinity;
     if (c && moved < 25 && age < 15 * 60000) { setState((s) => (s && s.at === c.at ? s : c)); return; }
