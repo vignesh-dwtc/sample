@@ -12,7 +12,7 @@ import { requireAuth } from '../auth.js';
 import { recordResult, DAILY_GAMES } from '../progress.js';
 import { ah, today, HttpError } from '../util.js';
 import {
-  answerFor, isValidGuess, normalizeWord, lexiconView, lexiconScore, lexiconXp, MAX_GUESSES, WORD_LENGTH,
+  answerFor, isValidGuess, normalizeWord, lexiconView, hintsFor, clueFor, lexiconScore, lexiconXp, MAX_GUESSES, WORD_LENGTH,
 } from '../games/lexicon.js';
 import { generateTarget, scoreExpression, targetXp, ExprError, MAX_EXPRESSION_LENGTH } from '../games/target.js';
 import { generateFlip, applyMoves, isSolved, validMoves, flipScore, flipXp } from '../games/flip.js';
@@ -122,7 +122,8 @@ function lexiconPayload(date, state, progress) {
   const view = lexiconView(guesses, answer);
   return {
     date, length: WORD_LENGTH, maxGuesses: MAX_GUESSES, ...view,
-    ...(view.finished ? { answer, score: lexiconScore(view.won, guesses.length) } : {}),
+    hints: hintsFor(answer, guesses),
+    ...(view.finished ? { answer, score: lexiconScore(view.won, guesses.length), clue: clueFor(answer) } : {}),
     ...(progress ? { progress } : {}),
   };
 }

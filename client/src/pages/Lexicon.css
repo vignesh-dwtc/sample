@@ -2,12 +2,22 @@
 .lx-page { display: flex; flex-direction: column; }
 .lx-game { display: flex; flex-direction: column; gap: 20px; align-items: stretch; }
 .lx-board-wrap { position: relative; display: flex; justify-content: center; padding-top: 6px; }
-.lx-board { display: grid; grid-template-rows: repeat(6, 1fr); gap: 6px; width: min(100%, 330px); }
+/* Width (and so tile size) shrinks as clue lines appear so board + clues + keyboard fit the
+   viewport. --lx-avail: px from the board's top to the keyboard (set by Lexicon.jsx);
+   --lx-lines: clue/teaser lines shown. Height = 6 tiles + 5 gaps + lines × --lx-line-h. */
+.lx-board {
+  --lx-line-h: 21px;
+  display: flex; flex-direction: column; gap: 6px; container-type: inline-size;
+  width: min(100%, 330px, max(230px, calc((var(--lx-avail, 9999px) - 36px - var(--lx-lines, 0) * var(--lx-line-h)) * 5 / 6 + 24px)));
+  transition: width 0.35s ease;
+}
+.lx-line { display: flex; flex-direction: column; align-items: center; }
+.lx-line > .lx-row { align-self: stretch; }
 .lx-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 
 .lx-tile {
   aspect-ratio: 1; display: grid; place-items: center;
-  font-size: clamp(1.5rem, 7vw, 2rem); font-weight: 800; text-transform: uppercase;
+  font-size: clamp(1.25rem, 9.5cqi, 2rem); font-weight: 800; text-transform: uppercase;
   border: 2px solid var(--border); border-radius: 10px; background: rgba(15, 16, 32, 0.4);
   color: var(--text); user-select: none; perspective: 400px;
 }
@@ -38,6 +48,52 @@
 }
 .lx-win .lx-tile { animation: lx-jump 0.5s ease both; }
 @keyframes lx-jump { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-18px); } 70% { transform: translateY(3px); } }
+
+/* ---------- Clue lines (one per wrong guess, under its row) ---------- */
+.lx-line-slot {
+  /* Clue lines may spill past the board's edges (centred) but never past the page gutter. */
+  display: flex; justify-content: center; min-width: 0; width: min(100% + 120px, 100vw - 32px); flex: none;
+  animation: lx-line-in 0.38s cubic-bezier(.2, .9, .3, 1.15) both;
+}
+@keyframes lx-line-in {
+  from { opacity: 0; max-height: 0; transform: translateY(-4px); }
+  to { opacity: 1; max-height: var(--lx-line-h); transform: none; }
+}
+.lx-line-slot:has(.lx-hint.open) { animation: none; }
+.lx-hint, .lx-next {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0;
+  height: calc(var(--lx-line-h) - 3px); margin-top: 3px; padding: 0 8px;
+  font: 600 0.8rem/1 var(--font); color: var(--text); white-space: nowrap;
+}
+.lx-hint {
+  border: 1px solid rgba(124, 92, 255, 0.35); border-radius: 999px;
+  background: rgba(124, 92, 255, 0.14); cursor: default; -webkit-tap-highlight-color: transparent;
+}
+.lx-hint.can-open { cursor: pointer; }
+.lx-hint.can-open:hover { border-color: var(--primary-2); }
+.lx-hint:focus-visible { outline: 2px solid var(--primary-2); outline-offset: 1px; }
+.lx-hint-icon { flex: none; font-size: 0.85rem; line-height: 1; }
+.lx-hint-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.lx-hint.open {
+  height: auto; min-height: calc(var(--lx-line-h) - 3px); padding: 4px 10px; border-radius: 10px;
+  white-space: normal; text-align: left; line-height: 1.3;
+}
+.lx-hint.open .lx-hint-text { overflow: visible; }
+.lx-hint-meaning { background: rgba(255, 209, 102, 0.12); border-color: rgba(255, 209, 102, 0.35); }
+.lx-next {
+  color: var(--text-dim); font-weight: 500; font-size: 0.74rem; letter-spacing: 0.02em;
+  border: 1px dashed rgba(163, 168, 214, 0.28); border-radius: 999px; opacity: 0.75;
+}
+.lx-next::before { content: '🔒'; font-size: 0.7rem; filter: grayscale(1); opacity: 0.8; }
+
+.lx-help-clues { list-style: none; padding-left: 0 !important; display: grid; gap: 4px; }
+.lx-result-clue {
+  display: flex; gap: 8px; align-items: baseline; margin: 0; padding: 10px 12px;
+  border-radius: var(--radius-sm); background: rgba(255, 209, 102, 0.08); border: 1px solid rgba(255, 209, 102, 0.3);
+}
+
+/* The message pill floats above the board instead of covering the first row. */
+.lx-board-wrap .gm-flash { top: auto; bottom: 100%; }
 
 .lx-answer { color: var(--text); letter-spacing: 0.12em; }
 
@@ -72,6 +128,9 @@
   .lx-key { height: 52px; font-size: 0.9rem; }
 }
 @media (max-height: 700px) {
-  .lx-board { width: min(100%, 270px); }
   .lx-key { height: 48px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lx-line-slot { animation: none; }
+  .lx-board { transition: none; }
 }

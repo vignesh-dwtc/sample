@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../lib/api.js';
 import { useSession } from '../lib/session.jsx';
 import { ResultPanel, GameStatus, GameHeader, useDailyGame, siteUrl } from '../games/index.js';
@@ -20,6 +20,51 @@ function shareTextFor(data) {
   return `PlayNest Lexicon ${data.date} ${n}/${data.maxGuesses}\n\n${grid}\n\n${siteUrl()}/play/lexicon`;
 }
 
+const HINT_ICONS = { vowels: '🔤', repeats: '🔁', meaning: '💡', first: '🅰️', letter: '🔍' };
+const HINT_LABELS = { vowels: 'Vowels', repeats: 'Repeats', meaning: 'Meaning', first: 'First letter', letter: 'A letter' };
+const CLUE_HELP = [
+  ['vowels', 'How many vowels (Y counts as a consonant)'],
+  ['repeats', 'Whether any letter repeats'],
+  ['meaning', 'What the word means'],
+  ['first', 'Its first letter'],
+  ['letter', 'One more letter you haven’t placed yet'],
+];
+const CLUE_ROWS = 5; // guesses 1–5 each unlock a clue
+const KEYBOARD_FALLBACK = 196; // keyboard height + gap, before it has been measured
+
+/** One unlocked clue, shown under its row. One line with an ellipsis; tap/hover for the full text. */
+function Hint({ hint }) {
+  const ref = useRef(null);
+  const [open, setOpen] = useState(false);
+  const [clipped, setClipped] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current?.querySelector('.lx-hint-text');
+    if (!el) return undefined;
+    const check = () => setClipped(el.scrollWidth > el.clientWidth + 1);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, [hint.text]);
+  const expandable = clipped || open;
+  return (
+    <div className="lx-line-slot">
+      <button
+        ref={ref}
+        type="button"
+        className={`lx-hint lx-hint-${hint.kind}${open ? ' open' : ''}${expandable ? ' can-open' : ''}`}
+        title={hint.text}
+        aria-label={`Clue ${hint.n}, ${HINT_LABELS[hint.kind] || hint.kind}: ${hint.text}`}
+        aria-expanded={expandable ? open : undefined}
+        tabIndex={expandable ? 0 : -1}
+        onClick={(e) => { if (expandable) setOpen((o) => !o); e.currentTarget.blur(); }}
+      >
+        <span className="lx-hint-icon" aria-hidden="true">{HINT_ICONS[hint.kind] || '💡'}</span>
+        <span className="lx-hint-text">{hint.text}</span>
+      </button>
+    </div>
+  );
+}
+
 const RESULT_TITLES = ['Genius!', 'Magnificent!', 'Impressive!', 'Splendid!', 'Great!', 'Phew!'];
 
 export default function Lexicon() {
@@ -33,10 +78,48 @@ export default function Lexicon() {
   const [showResult, setShowResult] = useState(false);
   const [progress, setProgress] = useState(null);
   const flashTimer = useRef();
+  const wrapRef = useRef(null);
+  const keyboardRef = useRef(null);
+  const keyboardH = useRef(KEYBOARD_FALLBACK);
 
   const guesses = data?.guesses || [];
   const finished = !!data?.finished;
   const maxGuesses = data?.maxGuesses || 6;
+  const hints = data?.hints || [];
+
+  // Clue lines: row r shows clue r+1 once that row has finished flipping. The row the next
+  // guess goes into (or the one still flipping) shows a "next clue" teaser instead, so the
+  // line is already reserved when the clue lands. Locked clues take no space.
+  const teaserRow = revealing >= 0 ? revealing : finished ? -1 : guesses.length;
+  const lineFor = (r) => {
+    const hint = r !== revealing ? hints.find((h) => h.n === r + 1) : null;
+    if (hint) return { hint };
+    if (r === teaserRow && r < CLUE_ROWS) return { teaser: true };
+    return null;
+  };
+  let lineCount = 0;
+  for (let r = 0; r < maxGuesses; r++) if (lineFor(r)) lineCount++;
+
+  // Fit board + clue lines + keyboard into the viewport: measure the space below the board's
+  // top edge once per resize and let CSS size the tiles from it (see .lx-board width).
+  useLayoutEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return undefined;
+    const measure = () => {
+      if (keyboardRef.current) {
+        const gap = parseFloat(getComputedStyle(wrap.parentElement).rowGap) || 0;
+        keyboardH.current = keyboardRef.current.offsetHeight + gap;
+      }
+      const top = wrap.getBoundingClientRect().top + window.scrollY;
+      const tabbar = document.querySelector('.pn-tabbar');
+      const bottomBar = tabbar && getComputedStyle(tabbar).display !== 'none' ? tabbar.offsetHeight : 0;
+      const avail = window.innerHeight - top - keyboardH.current - bottomBar - 12;
+      wrap.style.setProperty('--lx-avail', `${Math.round(avail)}px`);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [!!data, finished]);
 
   useEffect(() => {
     if (data?.finished && revealing < 0) setShowResult(true);
@@ -129,12 +212,13 @@ export default function Lexicon() {
     const isCurrent = !g && r === guesses.length && !finished;
     const letters = g ? g.word : isCurrent ? input : '';
     const winRow = g && data.won && r === guesses.length - 1 && revealing < 0;
+    const line = lineFor(r);
     rows.push(
+      <div key={r} className="lx-line">
       <div
-        key={r}
         className={`lx-row${isCurrent && shakeRow ? ' lx-shake' : ''}${winRow ? ' lx-win' : ''}`}
         onAnimationEnd={(e) => { if (e.animationName === 'lx-shake') setShakeRow(false); }}
-        role="row"
+        role="group"
         aria-label={g ? `${g.word}: ${g.marks.join(', ')}` : isCurrent ? `Current guess ${input || 'empty'}` : 'Empty row'}
       >
         {Array.from({ length: 5 }, (_, i) => {
@@ -144,7 +228,7 @@ export default function Lexicon() {
           return (
             <div
               key={i}
-              role="gridcell"
+              aria-hidden="true"
               className={`lx-tile${ch ? ' filled' : ''}${mark ? ` ${mark}` : ''}${flipping ? ' flip' : ''}${mark && !flipping ? ' shown' : ''}`}
               style={flipping || winRow ? { animationDelay: `${i * (flipping ? FLIP_STAGGER : 90)}ms` } : undefined}
             >
@@ -152,6 +236,11 @@ export default function Lexicon() {
             </div>
           );
         })}
+      </div>
+      {line?.hint && <Hint key={line.hint.n} hint={line.hint} />}
+      {line?.teaser && (
+        <div className="lx-line-slot"><div className="lx-next">Next clue after this guess</div></div>
+      )}
       </div>,
     );
   }
@@ -170,6 +259,13 @@ export default function Lexicon() {
               <li><span className="lx-key-demo near">B</span> in the word, wrong spot</li>
               <li><span className="lx-key-demo miss">C</span> not in the word (or no more copies)</li>
             </ul>
+            <p><strong>Clues:</strong> each wrong guess unlocks a clue under that row, in this order:</p>
+            <ol className="lx-help-clues">
+              {CLUE_HELP.map(([k, text]) => (
+                <li key={k}><span aria-hidden="true">{HINT_ICONS[k]}</span> {text}</li>
+              ))}
+            </ol>
+            <p className="muted small">Tap a clue that&apos;s cut off to read all of it.</p>
             <p className="muted small">Type on your keyboard or tap the keys. One word per day — same for everyone.</p>
           </>
         )}
@@ -181,9 +277,9 @@ export default function Lexicon() {
 
       {data && (
         <div className="lx-game">
-          <div className="lx-board-wrap">
+          <div className="lx-board-wrap" ref={wrapRef}>
             {flash && <div key={flash.key} className="gm-flash" role="status">{flash.text}</div>}
-            <div className="lx-board" role="grid" aria-label="Lexicon board">{rows}</div>
+            <div className="lx-board" role="group" aria-label="Lexicon board" style={{ '--lx-lines': lineCount }}>{rows}</div>
           </div>
 
           {finished && showResult ? (
@@ -198,9 +294,13 @@ export default function Lexicon() {
               ]}
               progress={progress}
               shareText={shareTextFor(data)}
-            />
+            >
+              {data.clue && (
+                <p className="lx-result-clue"><span aria-hidden="true">💡</span> <span><strong>Clue:</strong> {data.clue}</span></p>
+              )}
+            </ResultPanel>
           ) : !finished && (
-            <div className="lx-keyboard" aria-label="Keyboard">
+            <div className="lx-keyboard" aria-label="Keyboard" ref={keyboardRef}>
               {ROWS.map((row, i) => (
                 <div className="lx-krow" key={i}>
                   {row.map((k) => (
