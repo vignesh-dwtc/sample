@@ -4,6 +4,7 @@ services:
   - type: web
     name: playnest
     runtime: node
+    region: singapore      # closest Render region to India; keep Neon in Singapore too
     plan: free             # upgrade to "starter" later so the server never sleeps (keeps live party rooms alive)
     buildCommand: npm run build
     startCommand: npm start
