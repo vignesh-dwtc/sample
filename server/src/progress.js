@@ -35,6 +35,12 @@ export const ACHIEVEMENTS = {
   geo_guru:        { title: 'Local Expert',     desc: 'Score 80+ in Guess Where?',            icon: '🗺️' },
   road_warrior:    { title: 'Road Warrior',     desc: 'Travel 100 km on one trip',            icon: '🛣️' },
   globetrotter:    { title: 'Globetrotter',     desc: 'Travel 500 km on one trip',            icon: '🌍' },
+  six_machine:     { title: 'Six Machine',      desc: 'Hit 3 sixes in one Cricket Blitz innings', icon: '🏏' },
+  half_century:    { title: 'Half Century',     desc: 'Score 50+ runs in Cricket Blitz',      icon: '🎖️' },
+  highway_hero:    { title: 'Highway Hero',     desc: 'Score 10,000+ in Highway Rush',        icon: '🏎️' },
+  close_shave:     { title: 'Close Shave',      desc: '10 near misses in one Highway Rush run', icon: '💨' },
+  queen_covered:   { title: 'Queen Covered',    desc: 'Pocket and cover the queen in Carrom Strike', icon: '👑' },
+  carrom_king:     { title: 'Carrom King',      desc: 'Score 300+ in Carrom Strike',          icon: '🎯' },
 };
 
 /**

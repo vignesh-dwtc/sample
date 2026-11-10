@@ -16,6 +16,10 @@ const TravelMap = lazy(() => import('./pages/TravelMap.jsx'));
 const TravelQuiz = lazy(() => import('./pages/TravelQuiz.jsx'));
 const TravelBingo = lazy(() => import('./pages/TravelBingo.jsx'));
 const TravelPredict = lazy(() => import('./pages/TravelPredict.jsx'));
+const Arcade = lazy(() => import('./pages/Arcade.jsx'));
+const ArcadeCricket = lazy(() => import('./pages/ArcadeCricket.jsx'));
+const ArcadeHighway = lazy(() => import('./pages/ArcadeHighway.jsx'));
+const ArcadeCarrom = lazy(() => import('./pages/ArcadeCarrom.jsx'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard.jsx'));
 const Profile = lazy(() => import('./pages/Profile.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
@@ -39,6 +43,10 @@ export default function App() {
           <Route path="/travel/quiz" element={<TravelQuiz />} />
           <Route path="/travel/bingo" element={<TravelBingo />} />
           <Route path="/travel/predict" element={<TravelPredict />} />
+          <Route path="/arcade" element={<Arcade />} />
+          <Route path="/arcade/cricket" element={<ArcadeCricket />} />
+          <Route path="/arcade/highway" element={<ArcadeHighway />} />
+          <Route path="/arcade/carrom" element={<ArcadeCarrom />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />

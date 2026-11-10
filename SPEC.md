@@ -147,3 +147,33 @@ The owner is going on a 10–12 hour trip (mode unknown: road, train or flight; 
 - **Wikipedia nearby:** `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=LAT|LON&gsradius=10000&gslimit=50&format=json&origin=*`.
 
 **Testing:** Playwright can fake GPS with `browser.newContext({ geolocation: { latitude, longitude }, permissions: ['geolocation'] })` and `context.setGeolocation(...)` to simulate movement. Test with Indian coordinates, e.g. Bengaluru 12.97, 77.59 moving towards Chennai 13.08, 80.27. Set `localStorage['playnest.geo.ok']='1'` (or tap the location button) to start GPS. The cloud test machine can't reach the outside internet from the browser unless the proxy is configured, so external APIs may fail there. Make sure the UI handles that gracefully, and stub `page.route()` responses to test the success paths.
+
+## Arcade section and "wow" effects (added later)
+
+The owner asked for more animation and realistic games with a **wow factor**. He mainly plays on his **phone** (Indian audience). Everything must run smoothly at 60 fps on a mid-range Android phone, look premium, and degrade gracefully.
+
+**Shared foundation (already built; don't change the API, small additive edits are OK):**
+- `client/src/fx/index.js`:
+  - `confetti()`, `burst(el|{x,y})`, `floatText(el|{x,y}, text)`
+  - `sound(name)`: WebAudio-synthesized SFX (tap, success, error, coin, levelup, whoosh, swoosh, hit, crowd, engine, crash, click)
+  - `haptic(pattern)`
+  - mute: `isMuted`/`setMuted`/`useMuted`
+  - `reducedMotion()`
+  - Respect reduced motion. Call `sound()` only after a user gesture (browsers block audio before one).
+- `client/src/arcade/submit.js`: `submitArcadeScore(game, score, data, runId)` → `{progress}` | `{queued:true}` | `{duplicate:true}`.
+  - Create one `newRunId()` per round, and always pass `progress` to `useSession().celebrate(progress)`.
+- Server `POST /api/arcade/submit` (`server/src/games/arcade.js`): games `arcade_cricket` (runs 0–72), `arcade_highway` (0–50000), `arcade_carrom` (0–600). There must be at least 20 s between submits of the same game.
+  - Achievements: six_machine (`data.sixes` ≥ 3), half_century, highway_hero, close_shave (`data.nearMisses` ≥ 10), queen_covered (`data.queen` true), carrom_king.
+  - Leaderboard `game=arcade`.
+- Routes, with placeholder pages to replace: `/arcade` (Arcade.jsx hub), `/arcade/cricket`, `/arcade/highway`, `/arcade/carrom`.
+- `three` (three.js r181) is installed for the 3D games. Import only what you need (`import * as THREE from 'three'` is fine; the page chunk is lazy-loaded). Build all 3D models procedurally from primitives (no external model or texture files). Use canvas-generated textures where needed.
+
+**Game quality bar:**
+- **Controls:** touch-first (tap, swipe, drag), with keyboard on desktop.
+- **Presentation:** a responsive canvas filling the phone screen below the header. An intro screen with a "How to play" line and a big Play button. Score HUD, a pause button, and pause when the tab is hidden.
+- **Feel:** juicy feedback: camera shake, particles, slow-mo on big moments, sounds, haptics, animated score pop-ups.
+- **End of round:** a result card with stats, `celebrate`, Share, and Play again. Best score saved locally.
+- **Performance:** device pixel ratio capped at 2 (1.5 for 3D), no garbage-heavy per-frame allocations, dispose WebGL resources on unmount. If WebGL is unavailable, show a friendly message.
+- **Content:** all original names, art and text; no real teams, brands or players.
+
+**Testing note:** headless Chromium has WebGL through SwiftShader (slow but works). Use `page.screenshot` to check rendering, and keep runs short. Only 4 CPUs.

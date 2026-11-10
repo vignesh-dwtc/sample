@@ -9,6 +9,7 @@ import { profileRouter, leaderboardRouter } from './routes/profile.js';
 import { dailyRouter } from './routes/daily.js';
 import { detectiveRouter } from './routes/detective.js';
 import { travelRouter } from './routes/travel.js';
+import { arcadeRouter } from './routes/arcade.js';
 import { attachParty } from './party/index.js';
 
 const app = express();
@@ -27,6 +28,7 @@ app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/daily', dailyRouter);
 app.use('/api/detective', detectiveRouter);
 app.use('/api/travel', travelRouter);
+app.use('/api/arcade', arcadeRouter);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 
 // Serve the built React app (single Render service hosts API + WebSocket + frontend).
