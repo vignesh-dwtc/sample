@@ -53,7 +53,7 @@ leaderboardRouter.get('/', requireAuth, ah(async (req, res) => {
     const from = period === 'today' ? date : period === 'week' ? addDays(date, -6) : '1970-01-01';
     const games = game === 'party' ? ['party_trivia', 'party_reaction']
       : game === 'travel' ? ['travel_sky', 'travel_bingo', 'travel_predict', 'travel_quiz', 'travel_trip']
-      : game === 'arcade' ? ['arcade_cricket', 'arcade_highway', 'arcade_carrom'] : [game];
+      : game === 'arcade' ? ['arcade_cricket', 'arcade_highway', 'arcade_carrom', 'arcade_adventure'] : [game];
     // Per day keep each user's best score, then sum across the period.
     ({ rows } = await query(
       `WITH best AS (

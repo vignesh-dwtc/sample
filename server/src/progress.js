@@ -41,6 +41,8 @@ export const ACHIEVEMENTS = {
   close_shave:     { title: 'Close Shave',      desc: '10 near misses in one Highway Rush run', icon: '💨' },
   queen_covered:   { title: 'Queen Covered',    desc: 'Pocket and cover the queen in Carrom Strike', icon: '👑' },
   carrom_king:     { title: 'Carrom King',      desc: 'Score 300+ in Carrom Strike',          icon: '🎯' },
+  relic_hunter:    { title: 'Relic Hunter',     desc: 'Recover all 5 relics in Lost Kingdom',  icon: '🗿' },
+  untouchable:     { title: 'Untouchable',      desc: 'Finish Lost Kingdom without taking damage', icon: '🛡️' },
 };
 
 /**

@@ -100,7 +100,7 @@ test('strategyFor routes navigations, assets, statics; bypasses the rest', () =>
   assert.equal(s(`${ORIGIN}/manifest.webmanifest`), 'static');
   assert.equal(s(`${ORIGIN}/sw.js`), 'bypass');
   assert.equal(s(`${ORIGIN}/assets/x.js`, { method: 'POST' }), 'bypass');
-  assert.equal(s('https://fonts.googleapis.com/css2?family=Outfit'), 'bypass');
+  assert.equal(s('https://fonts.googleapis.com/css2?family=Nunito'), 'bypass');
   assert.equal(s('not a url'), 'bypass');
 });
 

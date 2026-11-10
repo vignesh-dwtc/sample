@@ -20,8 +20,9 @@
   --radius: 16px;
   --radius-sm: 10px;
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --font: 'Outfit', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font: 'Nunito', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --display: 'Baloo 2', 'Nunito', system-ui, sans-serif; /* headings, titles, big numbers */
+  --mono: 'Chakra Petch', ui-monospace, monospace;      /* scores, timers, HUD */
   color-scheme: dark;
 }
 
@@ -40,7 +41,7 @@ body {
 }
 a { color: var(--primary-2); text-decoration: none; }
 a:hover { text-decoration: underline; }
-h1, h2, h3 { line-height: 1.15; margin: 0 0 0.5em; }
+h1, h2, h3 { line-height: 1.15; margin: 0 0 0.5em; font-family: var(--display); letter-spacing: 0.005em; }
 h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; }
 h2 { font-size: 1.4rem; font-weight: 700; }
 h3 { font-size: 1.1rem; font-weight: 600; }

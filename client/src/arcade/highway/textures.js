@@ -133,13 +133,13 @@ export function truckBackTexture(i) {
   };
   flower(46, 62, 14, '#d81b60'); flower(210, 62, 14, '#d81b60'); flower(128, 50, 18, '#7b1fa2');
   g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillStyle = '#b71c1c'; g.font = '900 44px Outfit, Arial Black, sans-serif';
+  g.fillStyle = '#b71c1c'; g.font = '900 44px "Baloo 2", Arial Black, sans-serif';
   g.fillText('HORN', 128, 112);
-  g.fillStyle = '#0d47a1'; g.font = '900 34px Outfit, Arial Black, sans-serif';
+  g.fillStyle = '#0d47a1'; g.font = '900 34px "Baloo 2", Arial Black, sans-serif';
   g.fillText('OK', 128, 150);
-  g.fillStyle = '#1b5e20'; g.font = '800 30px Outfit, Arial Black, sans-serif';
+  g.fillStyle = '#1b5e20'; g.font = '800 30px "Baloo 2", Arial Black, sans-serif';
   g.fillText('PLEASE', 128, 186);
-  g.fillStyle = '#1b1b4a'; g.font = '700 15px Outfit, Arial, sans-serif';
+  g.fillStyle = '#1b1b4a'; g.font = '700 15px "Baloo 2", Arial, sans-serif';
   g.fillText('USE DIPPER AT NIGHT', 128, 222);
   return tex(c);
 }
@@ -160,8 +160,8 @@ export function boardTexture(i) {
   g.fillStyle = 'rgba(255,255,255,0.14)';
   for (let k = 0; k < 6; k++) { g.beginPath(); g.arc(440 - k * 30, 40 + k * 10, 60 - k * 6, 0, 7); g.fill(); }
   g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = b.fg;
-  g.font = '900 78px Outfit, Arial Black, sans-serif'; g.fillText(b.title, 256, 104, 480);
-  g.font = '700 34px Outfit, Arial, sans-serif'; g.fillText(b.sub, 256, 186, 480);
+  g.font = '900 78px "Baloo 2", Arial Black, sans-serif'; g.fillText(b.title, 256, 104, 480);
+  g.font = '700 34px "Baloo 2", Arial, sans-serif'; g.fillText(b.sub, 256, 186, 480);
   g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 10; g.strokeRect(5, 5, 502, 246);
   return tex(c);
 }

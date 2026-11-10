@@ -20,6 +20,7 @@ const Arcade = lazy(() => import('./pages/Arcade.jsx'));
 const ArcadeCricket = lazy(() => import('./pages/ArcadeCricket.jsx'));
 const ArcadeHighway = lazy(() => import('./pages/ArcadeHighway.jsx'));
 const ArcadeCarrom = lazy(() => import('./pages/ArcadeCarrom.jsx'));
+const ArcadeAdventure = lazy(() => import('./pages/ArcadeAdventure.jsx'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard.jsx'));
 const Profile = lazy(() => import('./pages/Profile.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/arcade/cricket" element={<ArcadeCricket />} />
           <Route path="/arcade/highway" element={<ArcadeHighway />} />
           <Route path="/arcade/carrom" element={<ArcadeCarrom />} />
+          <Route path="/arcade/adventure" element={<ArcadeAdventure />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />

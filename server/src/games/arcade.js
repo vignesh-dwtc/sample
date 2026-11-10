@@ -9,6 +9,8 @@ export const ARCADE_GAMES = {
   arcade_highway: { max: 50000, xp: (s) => Math.min(80, 10 + Math.round(s / 150)), win: (s) => s >= 3000 },
   // score = points for a timed round (coins 10/20, queen 50, combos)
   arcade_carrom: { max: 600, xp: (s) => Math.min(80, 10 + Math.round(s / 5)), win: (s) => s >= 120 },
+  // score = relics ×150 + gems ×10 + time bonus (max 300) + no-damage bonus (200); adventure runs 5–15 min
+  arcade_adventure: { max: 2500, xp: (s) => Math.min(120, 20 + Math.round(s / 20)), win: (s) => s >= 750 },
 };
 
 export function arcadeReward(game, score, data = {}) {
@@ -23,6 +25,10 @@ export function arcadeReward(game, score, data = {}) {
   if (game === 'arcade_highway') {
     if (score >= 10000) achievements.push('highway_hero');
     if (Number(data.nearMisses) >= 10) achievements.push('close_shave');
+  }
+  if (game === 'arcade_adventure') {
+    if (Number(data.relics) >= 5) achievements.push('relic_hunter');
+    if (data.flawless === true && Number(data.relics) >= 5) achievements.push('untouchable');
   }
   if (game === 'arcade_carrom') {
     if (data.queen === true) achievements.push('queen_covered');

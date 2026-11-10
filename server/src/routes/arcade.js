@@ -28,10 +28,10 @@ arcadeRouter.post('/submit', requireAuth, ah(async (req, res) => {
   lastSubmit.set(key, now);
   if (runKey) seenRuns.set(runKey, now + 6 * 3600 * 1000);
 
-  const { sixes, fours, nearMisses, queen, pocketed, durationMs } = clean;
+  const { sixes, fours, nearMisses, queen, pocketed, durationMs, relics, gems, flawless } = clean;
   const progress = await recordResult(req.user.id, {
     game, score, won: reward.won, xp: reward.xp, achievements: reward.achievements,
-    data: { sixes, fours, nearMisses, queen, pocketed, durationMs },
+    data: { sixes, fours, nearMisses, queen, pocketed, durationMs, relics, gems, flawless },
   });
   res.json({ progress });
 }));
