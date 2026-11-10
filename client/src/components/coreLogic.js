@@ -18,6 +18,7 @@ export const BOARD_GAMES = [
   { id: 'party', name: 'Party', icon: '🎉', unit: 'pts' },
   { id: 'detective', name: 'Detective', icon: '🕵️', unit: 'pts' },
   { id: 'travel', name: 'Travel', icon: '🧳', unit: 'pts' },
+  { id: 'arcade', name: 'Arcade', icon: '🕹️', unit: 'pts' },
 ];
 
 export const PERIODS = [
@@ -40,6 +41,9 @@ export const GAME_INFO = {
   travel_predict: { name: 'Distance Predictor', icon: '⏱️', to: '/travel/predict' },
   travel_quiz: { name: 'Guess Where?', icon: '❓', to: '/travel/quiz' },
   travel_trip: { name: 'Trip milestones', icon: '🛣️', to: '/travel' },
+  arcade_cricket: { name: 'Cricket Blitz', icon: '🏏', to: '/arcade/cricket' },
+  arcade_highway: { name: 'Highway Rush', icon: '🏎️', to: '/arcade/highway' },
+  arcade_carrom: { name: 'Carrom Strike', icon: '🎯', to: '/arcade/carrom' },
 };
 
 export const isValidBoardGame = (g) => BOARD_GAMES.some((b) => b.id === g);
@@ -180,6 +184,10 @@ export function titleFor(pathname) {
     [/^\/travel\/bingo/, 'Window Bingo'],
     [/^\/travel\/predict/, 'Distance Predictor'],
     [/^\/travel/, 'Travel'],
+    [/^\/arcade\/cricket/, 'Cricket Blitz'],
+    [/^\/arcade\/highway/, 'Highway Rush'],
+    [/^\/arcade\/carrom/, 'Carrom Strike'],
+    [/^\/arcade/, 'Arcade'],
     [/^\/leaderboard/, 'Leaderboard'],
     [/^\/profile/, 'Profile'],
   ];

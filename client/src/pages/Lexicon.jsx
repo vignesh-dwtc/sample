@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { api } from '../lib/api.js';
 import { useSession } from '../lib/session.jsx';
 import { ResultPanel, GameStatus, GameHeader, useDailyGame, siteUrl } from '../games/index.js';
+import { confetti, haptic, sound } from '../fx/index.js';
 import './Lexicon.css';
 
 const ROWS = [
@@ -168,14 +169,22 @@ export default function Lexicon() {
       const next = await api('/daily/lexicon/guess', { method: 'POST', body: { word } });
       const row = next.guesses.length - 1;
       setRevealing(row);
+      // A soft click as each tile turns over (mid-flip), then a fanfare on a win.
+      for (let i = 0; i < 5; i++) setTimeout(() => sound('click'), i * FLIP_STAGGER + 240);
       setData(next);
       setPending(null);
       if (next.finished) { setInput(''); setQueuedEnter(false); }
       setTimeout(() => {
         setRevealing(-1);
         if (next.finished) {
-          if (next.won) say(RESULT_TITLES[Math.min(row, 5)], 1800);
-          else say(next.answer.toUpperCase(), 2600);
+          if (next.won) {
+            say(RESULT_TITLES[Math.min(row, 5)], 1800);
+            sound('success'); haptic('success');
+            setTimeout(() => confetti({ y: 0.3 }), 350);
+          } else {
+            say(next.answer.toUpperCase(), 2600);
+            sound('error');
+          }
           setTimeout(() => {
             setShowResult(true);
             if (next.progress) { setProgress(next.progress); celebrate?.(next.progress); }

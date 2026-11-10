@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSession } from '../lib/session.jsx';
 import { IconClose } from './Icons.jsx';
+import { burst, haptic, sound } from '../fx/index.js';
 
 const EXIT_MS = 260;
 const MAX_VISIBLE = 4;
@@ -39,6 +40,8 @@ export default function Toasts() {
   const [dismissed, setDismissed] = useState(() => new Set());
   const timers = useRef(new Map());
   const phone = useIsPhone();
+  const announced = useRef(new Set());
+  const listRef = useRef(null);
 
   useEffect(() => {
     const live = new Set(toasts.filter((t) => !dismissed.has(t.id)).map((t) => t.id));
@@ -64,6 +67,24 @@ export default function Toasts() {
 
   useEffect(() => () => { for (const id of timers.current.values()) clearTimeout(id); }, []);
 
+  const shown = visible(items, phone ? MAX_VISIBLE_PHONE : MAX_VISIBLE);
+
+  // Achievements get their moment when they actually appear (they may queue behind others):
+  // golden medal flip (CSS), a chime, a haptic and a little gold burst.
+  useEffect(() => {
+    for (const t of shown) {
+      if (t.leaving || t.kind !== 'achievement' || announced.current.has(t.id)) continue;
+      announced.current.add(t.id);
+      const id = t.id;
+      setTimeout(() => {
+        sound('success');
+        haptic('success');
+        const el = listRef.current?.querySelector(`[data-toast-id="${id}"] .pn-medal`);
+        if (el) burst(el, { count: 28, colors: ['#ffd166', '#ffe9a8', '#ff9f43', '#fff'] });
+      }, 380);
+    }
+  });
+
   // Forget dismissed ids once the session has dropped them too.
   useEffect(() => {
     setDismissed((d) => {
@@ -76,12 +97,17 @@ export default function Toasts() {
 
   return (
     <div className="pn-toasts" role="region" aria-label="Notifications">
-      <div aria-live="polite" aria-atomic="false" className="pn-toasts-inner">
-        {visible(items, phone ? MAX_VISIBLE_PHONE : MAX_VISIBLE).map((t) => {
+      <div aria-live="polite" aria-atomic="false" className="pn-toasts-inner" ref={listRef}>
+        {shown.map((t) => {
           const kind = KINDS.has(t.kind) ? t.kind : 'info';
           return (
-            <div key={t.id} className={`pn-toast pn-toast-${kind}${t.leaving ? ' is-leaving' : ''}`} role="status">
-              {t.icon && <span className="pn-toast-icon" aria-hidden="true">{t.icon}</span>}
+            <div key={t.id} data-toast-id={t.id} className={`pn-toast pn-toast-${kind}${t.leaving ? ' is-leaving' : ''}`} role="status">
+              {t.icon && kind === 'achievement' && (
+                <span className="pn-medal" aria-hidden="true">
+                  <span className="pn-medal-coin"><span className="pn-medal-face">{t.icon}</span></span>
+                </span>
+              )}
+              {t.icon && kind !== 'achievement' && <span className="pn-toast-icon" aria-hidden="true">{t.icon}</span>}
               <div className="pn-toast-text">
                 {kind === 'achievement' && <span className="pn-toast-eyebrow">Achievement unlocked</span>}
                 {t.title && <strong className="pn-toast-title">{t.title}</strong>}

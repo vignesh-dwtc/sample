@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSession } from '../lib/session.jsx';
 import { TopNav, TabBar } from './Nav.jsx';
@@ -7,6 +7,8 @@ import PageErrorBoundary from './PageErrorBoundary.jsx';
 import { LogoMark } from './Logo.jsx';
 import { useInstallPrompt } from './useInstallPrompt.js';
 import { titleFor } from './coreLogic.js';
+import { Aurora, useGlobalMotion } from './Motion.jsx';
+import Celebrations from './Celebrations.jsx';
 import './Layout.css';
 
 function useOnline() {
@@ -38,6 +40,7 @@ function Footer() {
         </div>
         <nav className="pn-footer-links" aria-label="Footer">
           <Link to="/">Play</Link>
+          <Link to="/arcade">Arcade</Link>
           <Link to="/party">Party</Link>
           <Link to="/travel">Travel</Link>
           <Link to="/detective">Detective</Link>
@@ -54,14 +57,18 @@ export default function Layout({ children }) {
   const { pathname } = useLocation();
   const online = useOnline();
 
-  // New page → top of the page + a meaningful tab title.
+  const mainRef = useRef(null);
+  // Route transitions, ripples, UI sounds, tilt; also scrolls to the top on a new page.
+  useGlobalMotion(mainRef);
+
+  // New page → a meaningful tab title.
   useEffect(() => {
-    window.scrollTo(0, 0);
     document.title = titleFor(pathname);
   }, [pathname]);
 
   return (
     <div className="pn-shell">
+      <Aurora />
       <a className="pn-skip" href="#main">Skip to content</a>
       <TopNav />
       {!online && (
@@ -69,12 +76,13 @@ export default function Layout({ children }) {
           <span aria-hidden="true">📡</span> You’re offline — some features need a connection.
         </div>
       )}
-      <main id="main" className="pn-main" tabIndex={-1}>
+      <main id="main" className="pn-main" tabIndex={-1} ref={mainRef}>
         <PageErrorBoundary resetKey={pathname}>{children}</PageErrorBoundary>
       </main>
       <Footer />
       <TabBar />
       <Toasts />
+      <Celebrations />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../lib/api.js';
 import { useSession } from '../lib/session.jsx';
 import { ResultPanel, GameStatus, GameHeader, useDailyGame, siteUrl } from '../games/index.js';
+import { confetti, haptic, sound } from '../fx/index.js';
 import './Reflex.css';
 
 const GAME_MS = 60000;
@@ -55,7 +56,10 @@ export default function Reflex() {
     };
     try {
       const res = await api('/daily/reflex/submit', { method: 'POST', body });
-      setResult({ ...body, progress: res.progress, best: res.best, newBest: res.best === body.score && body.score > (stats?.best ?? 0) });
+      const newBest = res.best === body.score && body.score > (stats?.best ?? 0);
+      setResult({ ...body, progress: res.progress, best: res.best, newBest });
+      sound(newBest ? 'success' : 'coin'); haptic(newBest ? 'success' : 'tap');
+      if (newBest) setTimeout(() => confetti({ y: 0.3 }), 200);
       setStats((s) => ({ ...(s || {}), best: res.best, plays: res.plays }));
       celebrate?.(res.progress);
       setSubmitError(null);

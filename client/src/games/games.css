@@ -63,3 +63,8 @@
   animation: gm-flash 1.6s ease both;
 }
 @keyframes gm-flash { 0% { opacity: 0; transform: translate(-50%, 0); } 12%, 80% { opacity: 1; transform: translate(-50%, -8px); } 100% { opacity: 0; transform: translate(-50%, -12px); } }
+
+/* Motion polish: the result emoji lands with a bounce, the XP stat glows. */
+.gm-result-emoji { animation: gm-emoji-land 0.8s 0.15s cubic-bezier(.2, 1.6, .4, 1) backwards; }
+@keyframes gm-emoji-land { from { transform: translateY(-30px) scale(0.3) rotate(-30deg); opacity: 0; } }
+.gm-stat-xp dd { text-shadow: 0 0 18px rgba(157, 132, 255, 0.6); }

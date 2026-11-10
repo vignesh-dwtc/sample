@@ -8,6 +8,8 @@ import {
   medal, nextAction, normalizeRoomCode, streakStatus,
 } from '../components/coreLogic.js';
 import { MODES, useTripState } from '../travel/trip.js';
+import { CountUp, XpBar } from '../components/Motion.jsx';
+import { CricketPreview, HighwayPreview, CarromPreview } from '../components/ArcadePreviews.jsx';
 import './Home.css';
 
 const STATUS_LABEL = { new: 'New', in_progress: 'In progress', done: 'Done' };
@@ -57,19 +59,16 @@ function Hero({ profile, countdown }) {
       <div className="hm-hero-stats">
         <div className={`hm-streak is-${st.state}`}>
           <span className="hm-streak-flame" aria-hidden="true">🔥</span>
-          <span className="hm-streak-num">{st.current}</span>
+          <span className="hm-streak-num"><CountUp value={st.current} duration={700} /></span>
           <span className="hm-streak-label">day streak</span>
         </div>
         <div className="hm-level">
           <div className="spread small">
             <strong>Level {level}</strong>
-            <span className="muted mono">{formatNumber(levelXp.current)} / {formatNumber(levelXp.needed)} XP</span>
+            <span className="muted mono"><CountUp value={levelXp.current} format={(n) => formatNumber(Math.round(n))} /> / {formatNumber(levelXp.needed)} XP</span>
           </div>
-          <div className="progress" role="progressbar" aria-label={`Level ${level} progress`}
-            aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)}>
-            <span style={{ width: `${pct}%` }} />
-          </div>
-          <div className="small muted">{formatNumber(levelXp.needed - levelXp.current)} XP to level {level + 1} · 🪙 {formatNumber(user.coins)}</div>
+          <XpBar pct={pct} label={`Level ${level} progress`} />
+          <div className="small muted">{formatNumber(levelXp.needed - levelXp.current)} XP to level {level + 1} · 🪙 <CountUp value={user.coins} format={(n) => formatNumber(Math.round(n))} /></div>
         </div>
       </div>
 
@@ -103,6 +102,36 @@ function Hero({ profile, countdown }) {
         </span>
         <span aria-hidden="true" className="hm-cta-arrow">→</span>
       </Link>
+    </section>
+  );
+}
+
+const ARCADE_TILES = [
+  { id: 'cricket', name: 'Cricket Blitz', icon: '🏏', to: '/arcade/cricket', Preview: CricketPreview },
+  { id: 'highway', name: 'Highway Rush', icon: '🏎️', to: '/arcade/highway', Preview: HighwayPreview },
+  { id: 'carrom', name: 'Carrom Strike', icon: '🎯', to: '/arcade/carrom', Preview: CarromPreview },
+];
+
+function ArcadeHero() {
+  return (
+    <section className="card hm-arcade" aria-labelledby="hm-arcade-h">
+      <div className="hm-arcade-glow" aria-hidden="true" />
+      <div className="hm-arcade-text">
+        <span className="hm-arcade-kicker"><span className="hm-arcade-dot" aria-hidden="true" /> New · Arcade</span>
+        <h2 id="hm-arcade-h">Cricket, racing &amp; carrom — <span className="hm-arcade-hl">in 3D</span></h2>
+        <p className="muted small">Real physics, punchy sound and quick rounds made for your phone.</p>
+        <Link to="/arcade" className="btn hm-arcade-cta">Enter the Arcade <span aria-hidden="true">→</span></Link>
+      </div>
+      <ul className="hm-arcade-tiles">
+        {ARCADE_TILES.map(({ id, name, icon, to, Preview }) => (
+          <li key={id}>
+            <Link to={to} className="hm-arcade-tile pn-tilt">
+              <Preview />
+              <span className="hm-arcade-label"><span aria-hidden="true">{icon}</span> {name}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -143,14 +172,13 @@ function Dailies({ daily, countdown }) {
           <span className="mono">{formatHms(countdown.ms)}</span>
         </div>
       </div>
-      <div className="hm-dailies">
-        {DAILIES.map((g, i) => {
+      <div className="hm-dailies pn-stagger">
+        {DAILIES.map((g) => {
           const s = daily?.[g.game] || 'new';
           const isNext = next.game === g.game;
           return (
             <Link key={g.game} to={g.to}
-              className={`card interactive hm-daily hue-${g.hue} is-${s}${isNext ? ' is-next' : ''}`}
-              style={{ animationDelay: `${80 + i * 70}ms` }}>
+              className={`card interactive hm-daily pn-tilt hue-${g.hue} is-${s}${isNext ? ' is-next' : ''}`}>
               <div className="spread">
                 <span className="hm-daily-icon" aria-hidden="true">{g.icon}</span>
                 <span className={`badge${s === 'done' ? ' done' : s === 'in_progress' ? ' gold' : ''}`}>
@@ -184,9 +212,9 @@ function MoreGames({ stats }) {
   return (
     <section aria-labelledby="hm-more">
       <h2 id="hm-more" className="hm-section-head">More ways to play</h2>
-      <div className="hm-more">
-        <Link to="/play/reflex" className="card interactive hm-game hm-reflex">
-          <span className="badge">Arcade · unlimited</span>
+      <div className="hm-more pn-stagger">
+        <Link to="/play/reflex" className="card interactive hm-game hm-reflex pn-tilt">
+          <span className="badge">Unlimited runs</span>
           <div className="hm-game-icon" aria-hidden="true">⚡</div>
           <h3>Reflex</h3>
           <p className="muted small">60 seconds. Tap the targets before they vanish. Misses cost time.</p>
@@ -215,7 +243,7 @@ function MoreGames({ stats }) {
           </div>
         </div>
 
-        <Link to="/detective" className="card interactive hm-game hm-detective">
+        <Link to="/detective" className="card interactive hm-game hm-detective pn-tilt">
           <span className="badge">AI mystery</span>
           <div className="hm-game-icon" aria-hidden="true">🕵️</div>
           <h3>Detective</h3>
@@ -251,8 +279,8 @@ function MiniLeaderboard({ userId, xp }) {
       {!state.loading && !state.error && (
         state.rows.length ? (
           <ol className="hm-board-list">
-            {state.rows.map((r) => (
-              <li key={r.id} className={`hm-board-row${r.id === userId ? ' is-me' : ''}`}>
+            {state.rows.map((r, i) => (
+              <li key={r.id} className={`hm-board-row pn-rise${r.id === userId ? ' is-me' : ''}`} style={{ animationDelay: `${i * 60}ms` }}>
                 <span className="hm-board-rank">{medal(r.rank) || r.rank}</span>
                 <span className="hm-board-avatar" aria-hidden="true">{r.avatar}</span>
                 <span className="hm-board-name">{r.username}{r.id === userId && <span className="muted"> (you)</span>}</span>
@@ -276,7 +304,7 @@ function AchievementTeaser({ achievements }) {
         <Link to="/profile" className="small">View all →</Link>
       </div>
       <div className="spread small"><span className="muted">{unlocked} of {total} unlocked</span><span className="mono muted">{Math.round(pct)}%</span></div>
-      <div className="progress" aria-hidden="true"><span style={{ width: `${pct}%` }} /></div>
+      <div aria-hidden="true"><XpBar pct={pct} /></div>
       {next.length ? (
         <ul className="hm-ach-list">
           {next.map((a) => (
@@ -319,6 +347,7 @@ export default function Home() {
   return (
     <div className="container hm-page">
       <Hero profile={profile} countdown={countdown} />
+      <ArcadeHero />
       <TravelCard />
       <Dailies daily={profile.daily} countdown={countdown} />
       {isGuest && (
@@ -332,7 +361,7 @@ export default function Home() {
         </div>
       )}
       <MoreGames stats={profile.stats} />
-      <div className="hm-bottom">
+      <div className="hm-bottom pn-stagger">
         <MiniLeaderboard userId={profile.user.id} xp={profile.user.xp} />
         <AchievementTeaser achievements={profile.achievements} />
       </div>

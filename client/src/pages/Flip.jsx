@@ -3,6 +3,7 @@ import { api } from '../lib/api.js';
 import { useSession } from '../lib/session.jsx';
 import { ResultPanel, GameStatus, GameHeader, useDailyGame, siteUrl } from '../games/index.js';
 import { pressCell, replay, litCount, SIZE } from '../games/flipLogic.js';
+import { confetti, haptic, sound } from '../fx/index.js';
 import './Flip.css';
 
 function shareTextFor(data) {
@@ -53,6 +54,8 @@ export default function Flip() {
   useEffect(() => {
     if (solved && data && !data.finished) {
       setSolvedAnim(true);
+      sound('success'); haptic('success');
+      setTimeout(() => confetti({ y: 0.35 }), 450);
       submit(moves);
     }
   }, [solved, data, moves, submit]);

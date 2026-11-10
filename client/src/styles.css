@@ -74,11 +74,13 @@ p { margin: 0 0 1em; }
   padding: 12px 20px; min-height: 44px;
   border-radius: 999px; border: 1px solid transparent;
   background: var(--primary); color: #fff; cursor: pointer;
-  transition: transform 0.1s ease, background 0.15s ease, opacity 0.15s;
+  transition: transform 0.18s cubic-bezier(.3, 1.5, .5, 1), background 0.15s ease, opacity 0.15s, box-shadow 0.2s;
   text-decoration: none !important;
+  /* Pressable: ripple container (see components/Motion.css). */
+  position: relative; overflow: hidden; isolation: isolate; -webkit-tap-highlight-color: transparent;
 }
 .btn:hover { background: var(--primary-2); }
-.btn:active { transform: scale(0.97); }
+.btn:active:not(:disabled) { transform: scale(0.95); transition-duration: 0.06s; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn.secondary { background: var(--surface-2); border-color: var(--border); color: var(--text); }
 .btn.secondary:hover { border-color: var(--primary); }
@@ -127,5 +129,6 @@ label.field { display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem
   .card { padding: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  html { scroll-behavior: auto !important; }
 }

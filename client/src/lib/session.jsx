@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { api, getToken, setToken } from './api.js';
+import { emitCelebrate } from '../fx/motion.js';
 
 const SessionCtx = createContext(null);
 
@@ -52,6 +53,8 @@ export function SessionProvider({ children }) {
     if (progress.streak?.extended) toast({ kind: 'streak', icon: '🔥', title: `${progress.streak.current}-day streak!`, body: 'Come back tomorrow to keep it going' });
     if (progress.levelUp) toast({ kind: 'level', icon: '⬆️', title: `Level ${progress.level}!`, body: 'You leveled up', duration: 5000 });
     for (const a of progress.achievements || []) toast({ kind: 'achievement', icon: a.icon, title: a.title, body: a.desc, duration: 5000 });
+    // Big moments: the LEVEL UP overlay (components/Celebrations.jsx) listens for this.
+    if (progress.levelUp) emitCelebrate('levelup', { level: progress.level, xpGained: progress.xpGained });
     refresh().catch(() => {});
   }, [toast, refresh]);
 

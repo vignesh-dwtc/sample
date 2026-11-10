@@ -3,6 +3,7 @@ import { api } from '../lib/api.js';
 import { useSession } from '../lib/session.jsx';
 import { ResultPanel, GameStatus, GameHeader, useDailyGame, siteUrl } from '../games/index.js';
 import { evaluateTokens, tokensToString, OP_SYMBOL } from '../games/expr.js';
+import { confetti, haptic, sound } from '../fx/index.js';
 import './Target.css';
 
 const OPS = ['+', '-', '*', '/'];
@@ -61,8 +62,12 @@ export default function Target() {
     try {
       const next = await api('/daily/target/submit', { method: 'POST', body: { expression: tokensToString(tokens) } });
       setData(next);
+      const d = next.result?.distance;
+      if (d === 0) { sound('success'); haptic('success'); confetti({ y: 0.3 }); }
+      else if (next.result?.score > 0) sound('coin');
       if (next.progress) celebrate?.(next.progress);
     } catch (e) {
+      sound('error');
       setSubmitError(e.message);
       setShake(true);
       if (e.status === 409) reload();

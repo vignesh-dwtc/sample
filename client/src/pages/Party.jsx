@@ -9,6 +9,7 @@ import Trivia from '../party/Trivia.jsx';
 import Reaction from '../party/Reaction.jsx';
 import Scoreboard from '../party/Scoreboard.jsx';
 import Results from '../party/Results.jsx';
+import { confetti, haptic, sound } from '../fx/index.js';
 import './Party.css';
 
 const CODE_RE = /^[ABCDEFGHJKLMNPQRSTUVWXYZ]{4}$/;
@@ -58,6 +59,18 @@ export default function Party() {
 
   // New game → forget last game's XP.
   useEffect(() => { if (room?.phase === 'playing') setProgress(null); }, [room?.phase]);
+
+  // Podium moment: fanfare + confetti when the final standings arrive (bigger if I made the top 3).
+  useEffect(() => {
+    if (room?.phase !== 'results') return undefined;
+    const list = party.final || [];
+    const mine = list.find((x) => x.id === me);
+    const podium = mine && mine.rank <= 3 && mine.score > 0;
+    sound(podium ? 'success' : 'coin');
+    if (podium) haptic('success');
+    const t = setTimeout(() => confetti({ y: 0.3, count: podium ? 160 : 70 }), 250);
+    return () => clearTimeout(t);
+  }, [room?.phase]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (room) setBusy(false); }, [room]);
 
   // Errors: room-level problems go back to the home screen; others become toasts.

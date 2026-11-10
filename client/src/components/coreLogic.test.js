@@ -135,3 +135,14 @@ test('tickCountdown counts every UTC rollover, not just the first', () => {
   s = tickCountdown({ ...s, ms: 500 }, 86_399_500); // day 2 rollover
   assert.equal(s.rolled, 2);
 });
+
+test('arcade is wired into boards, profile names and titles', async () => {
+  const { BOARD_GAMES, GAME_INFO } = await import('./coreLogic.js');
+  assert.ok(isValidBoardGame('arcade'));
+  assert.equal(BOARD_GAMES.find((g) => g.id === 'arcade').name, 'Arcade');
+  assert.equal(GAME_INFO.arcade_cricket.name, 'Cricket Blitz');
+  assert.equal(GAME_INFO.arcade_highway.to, '/arcade/highway');
+  assert.equal(GAME_INFO.arcade_carrom.name, 'Carrom Strike');
+  assert.equal(titleFor('/arcade'), 'Arcade · PlayNest');
+  assert.equal(titleFor('/arcade/cricket'), 'Cricket Blitz · PlayNest');
+});

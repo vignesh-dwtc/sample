@@ -57,3 +57,27 @@ export const IconTravel = (p) => (
     <path d="M9 11v5M15 11v5" />
   </svg>
 );
+
+export const IconArcade = (p) => (
+  <svg {...base} {...p}>
+    <path d="M12 13.5V8" />
+    <circle cx="12" cy="5.5" r="2.5" />
+    <path d="M4.5 15.5 12 12l7.5 3.5L12 19z" />
+    <path d="M4.5 15.5V17l7.5 3.5 7.5-3.5v-1.5" />
+  </svg>
+);
+
+export const IconSoundOn = (p) => (
+  <svg {...base} width={20} height={20} {...p}>
+    <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" fillOpacity=".15" />
+    <path className="pn-wave" d="M15.5 9a4 4 0 0 1 0 6" />
+    <path className="pn-wave w2" d="M18 6.5a7.5 7.5 0 0 1 0 11" />
+  </svg>
+);
+
+export const IconSoundOff = (p) => (
+  <svg {...base} width={20} height={20} {...p}>
+    <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" fillOpacity=".15" />
+    <path d="M16 9.5l5 5M21 9.5l-5 5" />
+  </svg>
+);

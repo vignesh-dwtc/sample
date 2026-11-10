@@ -123,3 +123,17 @@
   .pf-ach-grid { grid-template-columns: 1fr 1fr; }
 }
 .pf-field { display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; color: var(--text-dim); }
+
+/* Motion polish */
+.pf-badge.is-unlocked { position: relative; overflow: hidden; }
+.pf-badge.is-unlocked::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 233, 170, 0.18) 50%, transparent 65%);
+  transform: translateX(-100%); animation: pf-sheen 4.5s 1s ease-in-out infinite;
+}
+@keyframes pf-sheen { 0% { transform: translateX(-100%); } 30%, 100% { transform: translateX(100%); } }
+.pf-badge.is-unlocked .pf-badge-icon { display: inline-block; animation: pf-medal 0.9s cubic-bezier(.25, 1.2, .35, 1) backwards; }
+@keyframes pf-medal { from { transform: perspective(300px) rotateY(-540deg) scale(0.4); } }
+.pf-kpi-icon { display: inline-block; transition: transform 0.3s cubic-bezier(.3, 1.6, .5, 1); }
+.pf-kpi:hover .pf-kpi-icon { transform: scale(1.2) rotate(-8deg); }
+@media (prefers-reduced-motion: reduce) { .pf-badge.is-unlocked::after { animation: none; } }

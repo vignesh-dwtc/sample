@@ -92,7 +92,6 @@
 .hm-dailies { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .hm-daily {
   position: relative; display: flex; flex-direction: column; gap: 6px; color: var(--text); overflow: hidden;
-  animation: pop 0.35s ease both;
 }
 .hm-daily:hover { text-decoration: none; }
 .hm-daily h3 { margin: 6px 0 0; font-size: 1.3rem; }
@@ -222,3 +221,62 @@
   .hm-travel-art { width: 52px; height: 52px; font-size: 1.8rem; }
   .hm-travel-go { width: 100%; text-align: center; padding: 10px; border-radius: 999px; background: rgba(34, 211, 166, 0.14); border: 1px solid rgba(34, 211, 166, 0.4); }
 }
+
+/* ---------- Arcade hero ---------- */
+.hm-arcade {
+  position: relative; overflow: hidden; display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr); gap: 20px; align-items: center;
+  padding: 22px; border-color: rgba(255, 209, 102, 0.45);
+  background:
+    radial-gradient(520px 260px at 0% 0%, rgba(255, 92, 122, 0.22), transparent 70%),
+    radial-gradient(520px 260px at 100% 100%, rgba(255, 209, 102, 0.16), transparent 70%),
+    linear-gradient(180deg, #221a4a 0%, var(--bg-2) 100%);
+  box-shadow: 0 0 0 1px rgba(255, 209, 102, 0.12), 0 18px 50px rgba(255, 92, 122, 0.16), var(--shadow);
+  animation: pn-rise 0.6s 0.08s cubic-bezier(.2, .8, .2, 1) backwards;
+}
+.hm-arcade > * { position: relative; }
+.hm-arcade-glow {
+  position: absolute !important; inset: -40% -10% auto auto; width: 70%; height: 140%; pointer-events: none;
+  background: conic-gradient(from 200deg at 50% 50%, transparent, rgba(255, 209, 102, 0.12), transparent 30%, rgba(157, 132, 255, 0.14), transparent 60%);
+  animation: hm-arcade-spin 18s linear infinite; border-radius: 50%;
+}
+@keyframes hm-arcade-spin { to { transform: rotate(360deg); } }
+.hm-arcade-text { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; }
+.hm-arcade-text h2 { margin: 0; font-size: clamp(1.35rem, 4.6vw, 1.75rem); font-weight: 800; }
+.hm-arcade-text p { margin: 0; }
+.hm-arcade-hl {
+  background: linear-gradient(90deg, #ffd166, #ff5c7a 60%, #9d84ff); -webkit-background-clip: text; background-clip: text; color: transparent;
+  font-style: italic; padding-right: 0.08em;
+}
+.hm-arcade-kicker {
+  display: inline-flex; align-items: center; gap: 7px; padding: 3px 10px; border-radius: 999px;
+  font-size: 0.7rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold);
+  background: rgba(255, 209, 102, 0.1); border: 1px solid rgba(255, 209, 102, 0.4);
+}
+.hm-arcade-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px var(--gold); animation: hm-arcade-blink 1.4s ease-in-out infinite; }
+@keyframes hm-arcade-blink { 50% { opacity: 0.3; } }
+.hm-arcade-cta {
+  margin-top: 4px; font-weight: 800;
+  background: linear-gradient(90deg, #ff9f43, #ff5c7a 55%, #9d5cff);
+  box-shadow: 0 10px 28px rgba(255, 92, 122, 0.4);
+}
+.hm-arcade-cta:hover { background: linear-gradient(90deg, #ffb366, #ff7a93 55%, #ad78ff); }
+.hm-arcade-tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.hm-arcade-tile {
+  position: relative; display: block; border-radius: 14px; overflow: hidden; color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+.hm-arcade-tile:hover { text-decoration: none; }
+.hm-arcade-tile .ap-stage { aspect-ratio: 4 / 5; }
+.hm-arcade-label {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 8px 7px; z-index: 1;
+  font-size: 0.78rem; font-weight: 800; text-align: center; line-height: 1.2;
+  background: linear-gradient(180deg, transparent, rgba(8, 9, 24, 0.9) 55%);
+}
+@media (max-width: 760px) {
+  .hm-arcade { grid-template-columns: 1fr; padding: 18px; gap: 14px; }
+  .hm-arcade-text .btn { align-self: stretch; }
+  .hm-arcade-text { order: 0; }
+  .hm-arcade-tiles { gap: 8px; }
+  .hm-arcade-label { font-size: 0.7rem; padding-inline: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { .hm-arcade-glow, .hm-arcade-dot { animation: none !important; } }

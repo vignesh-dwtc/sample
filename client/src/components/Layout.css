@@ -204,3 +204,66 @@
 .pn-crash { text-align: center; padding-top: 56px; display: flex; flex-direction: column; align-items: center; }
 .pn-crash-icon { font-size: 3.5rem; margin-bottom: 8px; animation: pop 0.35s ease both; }
 .pn-crash-actions { justify-content: center; }
+
+/* ---------- Toast polish: springier enter/exit, icon pop, golden medal flip ---------- */
+.pn-toast { animation-duration: 0.5s; animation-timing-function: cubic-bezier(.2, 1.35, .35, 1); will-change: transform, opacity; }
+.pn-toast.is-leaving { animation-duration: 0.26s; animation-timing-function: cubic-bezier(.5, 0, .75, 0); }
+.pn-toast-icon { animation: pn-icon-pop 0.6s 0.12s cubic-bezier(.2, 1.7, .4, 1) both; }
+@keyframes pn-icon-pop { 0% { transform: scale(0) rotate(-40deg); } 70% { transform: scale(1.25) rotate(8deg); } 100% { transform: none; } }
+.pn-toast::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: linear-gradient(180deg, var(--primary-2), var(--accent)); opacity: 0.9;
+}
+.pn-toast-achievement::before { background: linear-gradient(180deg, #fff1c2, var(--gold), #ff9f43); }
+.pn-toast-level::before { background: linear-gradient(180deg, var(--accent), var(--primary-2)); }
+.pn-toast-streak::before { background: linear-gradient(180deg, #ffd166, var(--warn), #ff5c7a); }
+.pn-toast-error::before { background: var(--danger); }
+
+.pn-medal { flex: none; width: 46px; height: 46px; perspective: 400px; margin: -2px 0; }
+.pn-medal-coin {
+  position: relative; display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #fff3c4 0%, #ffd166 30%, #e0a526 65%, #a86d0c 100%);
+  box-shadow: inset 0 0 0 3px rgba(255, 240, 190, 0.7), inset 0 -4px 8px rgba(120, 70, 0, 0.45), 0 4px 14px rgba(255, 190, 70, 0.55);
+  animation: pn-medal-flip 1.1s 0.1s cubic-bezier(.25, 1.2, .35, 1) both;
+  transform-style: preserve-3d;
+}
+.pn-medal-coin::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.75) 50%, transparent 65%);
+  transform: translateX(-60%); opacity: 0; animation: pn-medal-glint 0.9s 1.1s ease-out both;
+}
+.pn-medal-face { font-size: 1.45rem; line-height: 1; filter: drop-shadow(0 1px 1px rgba(90, 50, 0, 0.5)); }
+@keyframes pn-medal-flip {
+  0% { transform: scale(0.2) rotateY(0deg); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: scale(1) rotateY(720deg); opacity: 1; }
+}
+@keyframes pn-medal-glint { 0% { opacity: 1; transform: translateX(-60%); } 100% { opacity: 0; transform: translateX(60%); } }
+@media (max-width: 760px) { .pn-medal { width: 38px; height: 38px; } .pn-medal-face { font-size: 1.2rem; } }
+@media (prefers-reduced-motion: reduce) { .pn-medal-coin, .pn-medal-coin::after, .pn-toast-icon { animation: none !important; opacity: 1; } }
+
+/* ---------- Nav extras ---------- */
+.pn-nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pn-nav-right .pn-chip { margin-left: 0; }
+.pn-link-new {
+  display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-size: 0.62rem; font-weight: 800;
+  letter-spacing: 0.06em; vertical-align: 2px; color: #2a1a00; background: linear-gradient(90deg, #ffd166, #ff9f43);
+}
+.pn-tab-new { position: absolute; top: 4px; right: calc(50% - 22px); width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 2px rgba(18, 19, 40, 0.92), 0 0 10px var(--gold); }
+@media (max-width: 760px) {
+  .pn-tab.is-active svg { animation: pn-tab-bounce 0.45s cubic-bezier(.3, 1.7, .5, 1); }
+  .pn-mute { width: 36px; height: 36px; }
+}
+@keyframes pn-tab-bounce { 0% { transform: scale(0.8); } 100% { transform: translateY(-2px) scale(1.08); } }
+/* Six nav links + sound + chip: tighten on small laptops / tablets so nothing overflows. */
+@media (min-width: 761px) and (max-width: 1040px) {
+  .pn-topbar-inner { gap: 10px; }
+  .pn-links { margin-left: 4px; gap: 0; }
+  .pn-link { padding: 8px 9px; font-size: 0.95rem; }
+  .pn-link-new { display: none; }
+  .pn-chip-name { display: none; }
+  .pn-chip { padding-right: 12px; }
+}
+@media (min-width: 761px) and (max-width: 860px) {
+  .pn-logo-text { display: none; }
+}

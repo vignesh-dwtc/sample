@@ -1,11 +1,15 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useSession } from '../lib/session.jsx';
 import Logo from './Logo.jsx';
-import { IconPlay, IconParty, IconDetective, IconTrophy, IconUser, IconTravel } from './Icons.jsx';
+import { IconPlay, IconParty, IconDetective, IconTrophy, IconUser, IconTravel, IconArcade, IconSoundOn, IconSoundOff } from './Icons.jsx';
+import { setMuted, sound, useMuted } from '../fx/index.js';
 
 const LINKS = [
   { to: '/', label: 'Play', Icon: IconPlay, match: (p) => p === '/' || p.startsWith('/play') },
-  { to: '/party', label: 'Party', Icon: IconParty, match: (p) => p.startsWith('/party') },
+  { to: '/arcade', label: 'Arcade', Icon: IconArcade, match: (p) => p.startsWith('/arcade'), isNew: true },
+  // Party leaves the phone tab bar for Arcade: rooms are mostly joined from a shared link or code,
+  // and Home keeps the join-code box + host buttons. Party stays in the desktop nav and footer.
+  { to: '/party', label: 'Party', Icon: IconParty, match: (p) => p.startsWith('/party'), tab: false },
   { to: '/travel', label: 'Travel', Icon: IconTravel, match: (p) => p.startsWith('/travel') },
   // Detective stays in the desktop nav, Home and the footer; the phone tab bar keeps 5 tabs.
   { to: '/detective', label: 'Detective', Icon: IconDetective, match: (p) => p.startsWith('/detective'), tab: false },
@@ -41,6 +45,24 @@ export function ProfileChip() {
   );
 }
 
+/** Sound on/off (persisted by the FX toolkit). */
+export function MuteToggle() {
+  const muted = useMuted();
+  const toggle = () => {
+    setMuted(!muted);
+    if (muted) sound('coin'); // just unmuted: a tiny confirmation chirp
+  };
+  return (
+    <button
+      type="button" className="pn-mute" data-sfx="off" onClick={toggle}
+      aria-pressed={!muted} aria-label="Sound effects"
+      title={muted ? 'Sound off' : 'Sound on'}
+    >
+      {muted ? <IconSoundOff /> : <IconSoundOn />}
+    </button>
+  );
+}
+
 export function TopNav() {
   const isActive = useActive();
   return (
@@ -55,10 +77,14 @@ export function TopNav() {
               aria-current={isActive(l) ? 'page' : undefined}
             >
               {l.label}
+              {l.isNew && <span className="pn-link-new" aria-label="new">NEW</span>}
             </NavLink>
           ))}
         </nav>
-        <ProfileChip />
+        <div className="pn-nav-right">
+          <MuteToggle />
+          <ProfileChip />
+        </div>
       </div>
     </header>
   );
@@ -79,6 +105,7 @@ export function TabBar() {
           aria-current={isActive(l) ? 'page' : undefined}
         >
           <l.Icon />
+          {l.isNew && !isActive(l) && <span className="pn-tab-new" aria-hidden="true" />}
           <span>{l.short || l.label}</span>
         </NavLink>
       ))}

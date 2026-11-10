@@ -8,6 +8,7 @@ import AccuseModal from '../detective/AccuseModal.jsx';
 import ConfirmModal from '../detective/ConfirmModal.jsx';
 import Reveal from '../detective/Reveal.jsx';
 import QuestionMeter from '../detective/QuestionMeter.jsx';
+import { confetti, haptic, sound } from '../fx/index.js';
 import './Detective.css';
 
 const MAX_QUESTIONS = 15;
@@ -107,6 +108,8 @@ export default function Detective() {
       setShowAccuse(false);
       setState('revealed');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (res.correct) { sound('success'); haptic('success'); setTimeout(() => confetti({ y: 0.25 }), 300); }
+      else { sound('error'); haptic('error'); }
       celebrate?.(res.progress);
     } catch (e) {
       setAskError(e.message);

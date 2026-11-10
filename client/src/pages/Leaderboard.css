@@ -112,3 +112,9 @@
   .lb-pod-1 .lb-pod-avatar { width: 58px; height: 58px; font-size: 1.9rem; }
   .lb-pod-score .small { display: none; }
 }
+
+/* Motion polish */
+.lb-pod-1 .lb-pod-medal { display: inline-block; animation: lb-bob 2.4s ease-in-out infinite; }
+@keyframes lb-bob { 50% { transform: translateY(-4px) rotate(-6deg); } }
+.lb-tab, .lb-period { position: relative; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .lb-pod-1 .lb-pod-medal { animation: none; } }

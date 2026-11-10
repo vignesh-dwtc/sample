@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useSession } from '../lib/session.jsx';
 import { GAME_INFO, formatNumber, levelPercent, validateClaim, winRate } from '../components/coreLogic.js';
+import { CountUp, XpBar } from '../components/Motion.jsx';
 import './Profile.css';
 
 const FALLBACK_AVATARS = ['🦊', '🐼', '🐸', '🦉', '🐙', '🦄', '🐯', '🐧', '🐨', '🦖', '🐝', '🐳'];
@@ -290,20 +291,18 @@ export default function Profile() {
           <div className="pf-level">
             <span className="pf-level-badge">Lv {level}</span>
             <div className="pf-level-bar">
-              <div className="progress" role="progressbar" aria-label="Level progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)}>
-                <span style={{ width: `${pct}%` }} />
-              </div>
+              <XpBar pct={pct} label="Level progress" />
               <span className="small muted mono">{formatNumber(levelXp.current)} / {formatNumber(levelXp.needed)} XP to level {level + 1}</span>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="pf-kpis" aria-label="Totals">
-        <div className="card pf-kpi"><span className="pf-kpi-icon" aria-hidden="true">✨</span><strong>{formatNumber(user.xp, true)}</strong><span className="muted small">Total XP</span></div>
-        <div className="card pf-kpi"><span className="pf-kpi-icon" aria-hidden="true">🔥</span><strong>{streak.current}</strong><span className="muted small">Streak · best {streak.best}</span></div>
-        <div className="card pf-kpi"><span className="pf-kpi-icon" aria-hidden="true">🪙</span><strong>{formatNumber(user.coins, true)}</strong><span className="muted small">Coins</span></div>
-        <div className="card pf-kpi"><span className="pf-kpi-icon" aria-hidden="true">🎮</span><strong>{formatNumber(totalPlays)}</strong><span className="muted small">Games · {totalWins} wins</span></div>
+      <section className="pf-kpis pn-stagger" aria-label="Totals">
+        <div className="card pf-kpi"><span className="pf-kpi-icon" aria-hidden="true">✨</span><strong><CountUp value={user.xp} format={(n) => formatNumber(Math.round(n), true)} /></strong><span className="muted small">Total XP</span></div>
+        <div className="card pf-kpi"><span className="pf-kpi-icon" aria-hidden="true">🔥</span><strong><CountUp value={streak.current} duration={700} /></strong><span className="muted small">Streak · best {streak.best}</span></div>
+        <div className="card pf-kpi"><span className="pf-kpi-icon" aria-hidden="true">🪙</span><strong><CountUp value={user.coins} format={(n) => formatNumber(Math.round(n), true)} /></strong><span className="muted small">Coins</span></div>
+        <div className="card pf-kpi"><span className="pf-kpi-icon" aria-hidden="true">🎮</span><strong><CountUp value={totalPlays} /></strong><span className="muted small">Games · {totalWins} wins</span></div>
       </section>
 
       <section className="card pf-stats" aria-labelledby="pf-stats-h">
@@ -350,9 +349,9 @@ export default function Profile() {
             ))}
           </div>
         </div>
-        <div className="progress"><span style={{ width: `${achievements.length ? (unlocked / achievements.length) * 100 : 0}%` }} /></div>
+        <div aria-hidden="true"><XpBar pct={achievements.length ? (unlocked / achievements.length) * 100 : 0} /></div>
         {shownAch.length ? (
-          <ul className="pf-ach-grid">
+          <ul className="pf-ach-grid pn-stagger" key={achFilter}>
             {shownAch.map((a) => (
               <li key={a.code} className={`pf-badge${a.unlockedAt ? ' is-unlocked' : ' is-locked'}`}>
                 <span className="pf-badge-icon" aria-hidden="true">{a.unlockedAt ? a.icon : '🔒'}</span>

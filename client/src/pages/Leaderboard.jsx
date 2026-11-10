@@ -9,7 +9,7 @@ import './Leaderboard.css';
 
 const PLAY_LINK = {
   lexicon: '/play/lexicon', target: '/play/target', flip: '/play/flip', reflex: '/play/reflex',
-  party: '/party', detective: '/detective', travel: '/travel', xp: '/',
+  party: '/party', detective: '/detective', travel: '/travel', arcade: '/arcade', xp: '/',
 };
 
 function Row({ r, unit, pinned }) {
@@ -30,7 +30,7 @@ function Podium({ rows, unit }) {
   // Visual order: 2nd, 1st, 3rd.
   const order = [rows[1], rows[0], rows[2]].filter(Boolean);
   return (
-    <ol className="lb-podium" aria-label="Top three">
+    <ol className="lb-podium" aria-label="Top three" key={rows.map((r) => r.id).join()}>
       {order.map((r) => (
         <li key={r.id} className={`lb-pod lb-pod-${r.rank}${r.me ? ' is-me' : ''}`}>
           <span className="lb-pod-medal" aria-hidden="true">{medal(r.rank)}</span>
@@ -171,7 +171,7 @@ export default function Leaderboard() {
           <>
             {showPodium && <Podium rows={rows} unit={meta.unit} />}
             {listRows.length > 0 && (
-              <ol className="lb-list" start={showPodium ? 4 : 1}>
+              <ol className="lb-list pn-stagger" start={showPodium ? 4 : 1} key={`${game}-${period}`}>
                 {listRows.map((r) => <Row key={r.id} r={r} unit={meta.unit} />)}
               </ol>
             )}

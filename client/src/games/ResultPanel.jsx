@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useSession } from '../lib/session.jsx';
 import { shareResult } from './share.js';
 import { useNextPuzzleCountdown } from './countdown.js';
+import { CountUp } from '../components/Motion.jsx';
 import './games.css';
 
 export const DAILY_LINKS = [
@@ -89,7 +90,7 @@ export default function ResultPanel({ game, emoji, title, subtitle, stats = [], 
       </div>
 
       {(stats.length > 0 || progress) && (
-        <dl className="gm-stats">
+        <dl className="gm-stats pn-stagger">
           {stats.map((s) => (
             <div key={s.label} className="gm-stat">
               <dt>{s.label}</dt>
@@ -99,7 +100,7 @@ export default function ResultPanel({ game, emoji, title, subtitle, stats = [], 
           {progress && (
             <div className="gm-stat gm-stat-xp">
               <dt>XP</dt>
-              <dd>+{progress.xpGained}</dd>
+              <dd>+<CountUp value={progress.xpGained} duration={1100} /></dd>
             </div>
           )}
           {progress?.streak?.current > 0 && (
