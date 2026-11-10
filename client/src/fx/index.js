@@ -2,7 +2,9 @@
 //   confetti({ x, y, count, colors, spread })   full-screen canvas confetti burst (x,y in 0..1 viewport fractions)
 //   burst(el | {x, y}, { count, colors })        small particle burst at an element or point (px)
 //   floatText(el | {x, y}, text, { color })       "+50" style floating label
-//   sound(name, { volume }?)                      synthesized SFX: 'tap','success','error','coin','levelup','whoosh','hit','crowd','swoosh','engine','crash','click'
+//   sound(name, { volume, pan, pitch }?)          realistic synthesized SFX (all old names kept: tap, click, success, error, coin, levelup,
+//                                                 whoosh, swoosh, hit, crowd, engine, crash) + cricket/highway/carrom/generic sets
+//   loop(name, { volume, rate, pan })             continuous beds → { set(), stop(fadeMs) }; soundNames() / loopNames() list them
 //   haptic(pattern)                               navigator.vibrate wrapper ('tap'|'success'|'error'|number[])
 //   isMuted() / setMuted(bool) / useMuted()       sound preference (persisted)
 //   reducedMotion()                               true if the user prefers reduced motion
@@ -59,59 +61,20 @@ export function floatText(target, text, { color = '#ffd166' } = {}) {
   const { x, y } = pt(target);
   const el = document.createElement('div');
   el.textContent = text; el.setAttribute('aria-hidden', 'true');
-  Object.assign(el.style, { position: 'fixed', left: `${x}px`, top: `${y}px`, transform: 'translate(-50%,-50%)', color, font: '800 1.4rem Outfit, system-ui, sans-serif', textShadow: '0 2px 12px rgba(0,0,0,.5)', pointerEvents: 'none', zIndex: '9999', transition: 'transform .9s cubic-bezier(.2,.8,.2,1), opacity .9s' });
+  Object.assign(el.style, { position: 'fixed', left: `${x}px`, top: `${y}px`, transform: 'translate(-50%,-50%)', color, font: "800 1.5rem 'Baloo 2', Nunito, system-ui, sans-serif", textShadow: '0 2px 12px rgba(0,0,0,.5)', pointerEvents: 'none', zIndex: '9999', transition: 'transform .9s cubic-bezier(.2,.8,.2,1), opacity .9s' });
   document.body.appendChild(el);
   requestAnimationFrame(() => { el.style.transform = 'translate(-50%,-160%) scale(1.15)'; el.style.opacity = '0'; });
   setTimeout(() => el.remove(), 950);
 }
 
-// ---------- sound (WebAudio synthesis — no audio files) ----------
-const MUTE_KEY = 'playnest.muted';
-let muted = (() => { try { return localStorage.getItem(MUTE_KEY) === '1'; } catch { return false; } })();
-const muteListeners = new Set();
-export const isMuted = () => muted;
-export function setMuted(m) { muted = !!m; try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch { /* ignore */ } muteListeners.forEach((l) => l()); }
-export const useMuted = () => useSyncExternalStore((l) => { muteListeners.add(l); return () => muteListeners.delete(l); }, () => muted, () => muted);
-
-let ac;
-const audio = () => { try { ac ||= new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); return ac; } catch { return null; } };
-function tone(a, { f = 440, f2, type = 'sine', dur = 0.15, vol = 0.15, delay = 0 }) {
-  const t = a.currentTime + delay, o = a.createOscillator(), g = a.createGain();
-  o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
-  vol = Math.max(0.0002, vol * gainScale);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
-}
-function noise(a, { dur = 0.3, vol = 0.12, filter = 1200, q = 0.7, delay = 0, sweepTo }) {
-  const t = a.currentTime + delay, len = Math.ceil(a.sampleRate * dur), buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-  const src = a.createBufferSource(), bp = a.createBiquadFilter(), g = a.createGain();
-  src.buffer = buf; bp.type = 'bandpass'; bp.frequency.setValueAtTime(filter, t); if (sweepTo) bp.frequency.exponentialRampToValueAtTime(sweepTo, t + dur); bp.Q.value = q;
-  vol = Math.max(0.0002, vol * gainScale);
-  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  src.connect(bp).connect(g).connect(a.destination); src.start(t); src.stop(t + dur);
-}
-const SOUNDS = {
-  click: (a) => tone(a, { f: 900, dur: 0.04, vol: 0.06, type: 'square' }),
-  tap: (a) => tone(a, { f: 520, f2: 680, dur: 0.07, vol: 0.08, type: 'triangle' }),
-  success: (a) => [523, 659, 784].forEach((f, i) => tone(a, { f, dur: 0.18, vol: 0.12, type: 'triangle', delay: i * 0.08 })),
-  error: (a) => tone(a, { f: 220, f2: 140, dur: 0.22, vol: 0.12, type: 'sawtooth' }),
-  coin: (a) => { tone(a, { f: 988, dur: 0.08, vol: 0.1, type: 'square' }); tone(a, { f: 1319, dur: 0.18, vol: 0.1, type: 'square', delay: 0.07 }); },
-  levelup: (a) => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(a, { f, dur: 0.25, vol: 0.12, type: 'triangle', delay: i * 0.09 })),
-  whoosh: (a) => noise(a, { dur: 0.35, vol: 0.12, filter: 400, sweepTo: 3000 }),
-  swoosh: (a) => noise(a, { dur: 0.2, vol: 0.1, filter: 2500, sweepTo: 600 }),
-  hit: (a) => { noise(a, { dur: 0.08, vol: 0.35, filter: 1800, q: 1.5 }); tone(a, { f: 180, f2: 90, dur: 0.12, vol: 0.2 }); },
-  crowd: (a) => noise(a, { dur: 1.8, vol: 0.09, filter: 900, q: 0.4 }),
-  engine: (a) => tone(a, { f: 70, f2: 140, dur: 0.6, vol: 0.06, type: 'sawtooth' }),
-  crash: (a) => { noise(a, { dur: 0.7, vol: 0.3, filter: 600, q: 0.5 }); tone(a, { f: 120, f2: 40, dur: 0.5, vol: 0.2, type: 'sawtooth' }); },
-};
-// Optional { volume } (0..1) scales the effect, e.g. collision clicks by impact speed.
-let gainScale = 1;
-export function sound(name, { volume = 1 } = {}) {
-  if (muted || !SOUNDS[name]) return;
-  const a = audio();
-  if (a) { gainScale = Math.max(0, Math.min(1, volume)); try { SOUNDS[name](a); } catch { /* ignore */ } gainScale = 1; }
-}
+// ---------- sound (procedural, physically-informed synthesis — see ./audio/registry.js) ----------
+// sound(name, { volume, pan, pitch }) one-shots, loop(name, opts) → { set, stop }, soundNames(), loopNames().
+// Mute is persisted under 'playnest.muted'; muting stops loops instantly.
+import { isMuted as audioIsMuted, setMuted as audioSetMuted, subscribeMuted } from './audio/index.js';
+export { sound, loop, soundNames, loopNames, preloadSounds, setCategoryVolume } from './audio/index.js';
+export const isMuted = audioIsMuted;
+export const setMuted = audioSetMuted;
+export const useMuted = () => useSyncExternalStore(subscribeMuted, audioIsMuted, audioIsMuted);
 
 // ---------- haptics ----------
 const HAPTICS = { tap: 10, success: [12, 40, 20], error: [40, 30, 40], heavy: 35 };
