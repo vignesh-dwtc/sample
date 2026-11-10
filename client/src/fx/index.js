@@ -2,7 +2,7 @@
 //   confetti({ x, y, count, colors, spread })   full-screen canvas confetti burst (x,y in 0..1 viewport fractions)
 //   burst(el | {x, y}, { count, colors })        small particle burst at an element or point (px)
 //   floatText(el | {x, y}, text, { color })       "+50" style floating label
-//   sound(name)                                   synthesized SFX: 'tap','success','error','coin','levelup','whoosh','hit','crowd','swoosh','engine','crash','click'
+//   sound(name, { volume }?)                      synthesized SFX: 'tap','success','error','coin','levelup','whoosh','hit','crowd','swoosh','engine','crash','click'
 //   haptic(pattern)                               navigator.vibrate wrapper ('tap'|'success'|'error'|number[])
 //   isMuted() / setMuted(bool) / useMuted()       sound preference (persisted)
 //   reducedMotion()                               true if the user prefers reduced motion
@@ -78,6 +78,7 @@ const audio = () => { try { ac ||= new (window.AudioContext || window.webkitAudi
 function tone(a, { f = 440, f2, type = 'sine', dur = 0.15, vol = 0.15, delay = 0 }) {
   const t = a.currentTime + delay, o = a.createOscillator(), g = a.createGain();
   o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  vol = Math.max(0.0002, vol * gainScale);
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
 }
@@ -86,6 +87,7 @@ function noise(a, { dur = 0.3, vol = 0.12, filter = 1200, q = 0.7, delay = 0, sw
   for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
   const src = a.createBufferSource(), bp = a.createBiquadFilter(), g = a.createGain();
   src.buffer = buf; bp.type = 'bandpass'; bp.frequency.setValueAtTime(filter, t); if (sweepTo) bp.frequency.exponentialRampToValueAtTime(sweepTo, t + dur); bp.Q.value = q;
+  vol = Math.max(0.0002, vol * gainScale);
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   src.connect(bp).connect(g).connect(a.destination); src.start(t); src.stop(t + dur);
 }
@@ -103,7 +105,13 @@ const SOUNDS = {
   engine: (a) => tone(a, { f: 70, f2: 140, dur: 0.6, vol: 0.06, type: 'sawtooth' }),
   crash: (a) => { noise(a, { dur: 0.7, vol: 0.3, filter: 600, q: 0.5 }); tone(a, { f: 120, f2: 40, dur: 0.5, vol: 0.2, type: 'sawtooth' }); },
 };
-export function sound(name) { if (muted || !SOUNDS[name]) return; const a = audio(); if (a) { try { SOUNDS[name](a); } catch { /* ignore */ } } }
+// Optional { volume } (0..1) scales the effect, e.g. collision clicks by impact speed.
+let gainScale = 1;
+export function sound(name, { volume = 1 } = {}) {
+  if (muted || !SOUNDS[name]) return;
+  const a = audio();
+  if (a) { gainScale = Math.max(0, Math.min(1, volume)); try { SOUNDS[name](a); } catch { /* ignore */ } gainScale = 1; }
+}
 
 // ---------- haptics ----------
 const HAPTICS = { tap: 10, success: [12, 40, 20], error: [40, 30, 40], heavy: 35 };

@@ -11,6 +11,6 @@
     "start": "node server/src/index.js",
     "dev:server": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
-    "test": "npm test --prefix server && node --test \"client/src/travel/**/*.test.js\" \"client/src/components/*.test.js\""
+    "test": "npm test --prefix server && node --test \"client/src/travel/**/*.test.js\" \"client/src/components/*.test.js\" \"client/src/arcade/carrom/*.test.js\""
   }
 }
